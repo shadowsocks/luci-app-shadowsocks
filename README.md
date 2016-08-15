@@ -1,7 +1,12 @@
 LuCI interface for Shadowsocks-libev
 ===
 
-编译说明
+特性
+---
+
+软件包不包含 [shadowsocks-libev][L] 的可执行文件, 需要用户自行添加 `ss-redir` 和 `ss-tunnel` 到 `$PATH` 中, 软件启动时会自动调用以上两个可执行文件.  
+
+编译
 ---
  > 从 OpenWrt 的 [SDK][S] 编译  
 
@@ -22,4 +27,5 @@ make package/luci-app-shadowsocks/compile V=99
 ```
 
 
+  [L]: https://github.com/shadowsocks/shadowsocks-libev
   [S]: http://wiki.openwrt.org/doc/howto/obtain.firmware.sdk
