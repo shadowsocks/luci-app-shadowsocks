@@ -55,8 +55,8 @@ OpenWrt luci for Shadowsocks-libev
 
 编译
 ---
- > 从 OpenWrt 的 [SDK][S] 编译  
 
+从 OpenWrt 的 [SDK][S] 编译  
 ```bash
 # 解压下载好的 SDK
 tar xjf OpenWrt-SDK-ar71xx-for-linux-x86_64-gcc-4.8-linaro_uClibc-0.9.33.2.tar.bz2

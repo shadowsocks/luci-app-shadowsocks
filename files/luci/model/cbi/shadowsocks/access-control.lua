@@ -44,9 +44,9 @@ s = m:section(TypedSection, "access_control", translate("Zone LAN"))
 s.anonymous = true
 
 o = s:option(MultiValue, "lan_ifaces", translate("Interface"))
-for _, zone in ipairs(fwm:get_zones()) do
-	if string.find(zone:name(), "wan") ~= 1 then
-		local net = nwm:get_network(zone:name())
+for _, net in ipairs(nwm:get_networks()) do
+	if net:name() ~= "loopback" and string.find(net:name(), "wan") ~= 1 then
+		net = nwm:get_network(net:name())
 		local device = net and net:get_interface()
 		if device then
 			o:value(device:name(), device:get_i18n())
