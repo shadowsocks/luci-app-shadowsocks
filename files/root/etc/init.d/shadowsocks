@@ -82,7 +82,7 @@ start_rules() {
 
 rules() {
 	if !(command -v ss-redir >/dev/null 2>&1); then
-		echo "ss-redir not found."
+		logger -st $NAME -p3 "ss-redir not found."
 		return 1
 	fi
 	GLOBAL_SERVER=$(uci_get_by_type global global_server)
@@ -122,6 +122,7 @@ start_tunnel() {
 
 tunnel() {
 	if !(command -v ss-tunnel >/dev/null 2>&1); then
+		logger -st $NAME -p3 "ss-tunnel not found."
 		return 0
 	fi
 	case "$ARG_UDP" in
@@ -136,7 +137,7 @@ tunnel() {
 }
 
 start() {
-	rules && redir
+	rules && redir || return 1
 	case "$(uci_get_by_type port_forward enable)" in
 		1|on|true|yes|enabled) tunnel;;
 	esac
