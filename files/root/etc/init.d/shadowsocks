@@ -70,7 +70,7 @@ start_rules() {
 		-i "$(uci_get_by_type access_control wan_bp_list)" \
 		-b "$(uci_get_by_type access_control wan_bp_ips)" \
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
-		-I "$(uci_get_by_type access_control lan_ifaces br-lan)" \
+		-I "$(uci_get_by_type access_control lan_ifaces)" \
 		-d "$(uci_get_by_type access_control lan_target)" \
 		-a "$(echo $(config_foreach gen_lan_hosts lan_hosts))" \
 		-e "$(uci_get_by_type access_control ipt_ext)" \

@@ -17,5 +17,3 @@ config port_forward
 	option destination '8.8.4.4:53'
 
 config access_control
-	option wan_bp_list '/dev/null'
-	option lan_ifaces 'br-lan'
