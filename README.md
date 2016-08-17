@@ -1,6 +1,8 @@
 OpenWrt luci for Shadowsocks-libev
 ===
 
+[![Download][B]][D]
+
 特性
 ---
 
@@ -77,3 +79,5 @@ make package/luci-app-shadowsocks/compile V=99
   [L]: https://github.com/shadowsocks/shadowsocks-libev
   [O]: https://github.com/shadowsocks/openwrt-shadowsocks
   [S]: http://wiki.openwrt.org/doc/howto/obtain.firmware.sdk
+  [B]: https://api.bintray.com/packages/aa65535/opkg/luci-app-shadowsocks/images/download.svg
+  [D]: https://bintray.com/aa65535/opkg/luci-app-shadowsocks/_latestVersion
