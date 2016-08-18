@@ -1,4 +1,4 @@
-OpenWrt luci for Shadowsocks-libev
+OpenWrt LuCI for Shadowsocks-libev
 ===
 
 [![Download][B]][D]
@@ -9,9 +9,6 @@ OpenWrt luci for Shadowsocks-libev
 软件包不包含 [shadowsocks-libev][L] 的可执行文件, 
 需要用户自行添加 `ss-redir` 和 `ss-tunnel` 到 `$PATH` 中.  
 可执行文件可通过安装 [openwrt-shadowsocks][O] 提供的 `shadowsocks-libev` 获得.  
-
-依赖
----
 
 软件包文件结构:
 ```
@@ -37,6 +34,9 @@ OpenWrt luci for Shadowsocks-libev
                             ├── access-control.lua // LuCI 访问控制
                             └── general.lua        // LuCI 基本设置
 ```
+
+依赖
+---
 
  1. `ss-redir` 必需  
     init 脚本执行时会先检查 `ss-redir` 是否存在,
