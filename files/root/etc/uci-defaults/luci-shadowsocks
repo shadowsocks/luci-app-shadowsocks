@@ -1,0 +1,15 @@
+#!/bin/sh
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@shadowsocks[-1]
+	add ucitrack shadowsocks
+	set ucitrack.@shadowsocks[-1].init=shadowsocks
+	commit ucitrack
+	delete firewall.shadowsocks
+	set firewall.shadowsocks=include
+	set firewall.shadowsocks.type=script
+	set firewall.shadowsocks.path=/var/etc/shadowsocks.include
+	set firewall.shadowsocks.reload=1
+	commit firewall
+EOF
+rm -f /tmp/luci-indexcache
+exit 0

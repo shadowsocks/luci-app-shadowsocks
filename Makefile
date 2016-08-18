@@ -45,18 +45,10 @@ endef
 
 define Package/luci-app-shadowsocks/postinst
 #!/bin/sh
-uci -q batch <<-EOF >/dev/null 2>&1
-	delete ucitrack.@shadowsocks[-1]
-	add ucitrack shadowsocks
-	set ucitrack.@shadowsocks[-1].init=shadowsocks
-	commit ucitrack
-	delete firewall.shadowsocks
-	set firewall.shadowsocks=include
-	set firewall.shadowsocks.type=script
-	set firewall.shadowsocks.path=/var/etc/shadowsocks.include
-	set firewall.shadowsocks.reload=1
-	commit firewall
-EOF
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	. /etc/uci-defaults/luci-shadowsocks
+	rm -f /etc/uci-defaults/luci-shadowsocks
+fi
 exit 0
 endef
 
@@ -75,6 +67,8 @@ define Package/luci-app-shadowsocks/install
 	$(INSTALL_DATA) ./files/root/etc/config/shadowsocks $(1)/etc/config/shadowsocks
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/root/etc/init.d/shadowsocks $(1)/etc/init.d/shadowsocks
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/root/etc/uci-defaults/* $(1)/etc/uci-defaults/
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/root/usr/bin/* $(1)/usr/bin/
 endef
