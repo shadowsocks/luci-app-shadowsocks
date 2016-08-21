@@ -2,24 +2,17 @@
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
-local shadowsocks = "shadowsocks"
-local ipkg = require("luci.model.ipkg")
-local uci = luci.model.uci.cursor()
+local lib = require("luci.model.cbi.shadowsocks.lib")
+local nwm = require("luci.model.network").init()
 
-function has_bin(name)
-	return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
-end
+local chnroute = lib.uci:get_first("chinadns", "chinadns", "chnroute")
 
-if not has_bin("ss-redir") then
-	return Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"),
+if not lib.has_bin("ss-redir") then
+	return Map(lib.name, "%s - %s" %{translate("ShadowSocks"),
 		translate("Access Control")}, '<b style="color:red">ss-redir not found.</b>')
 end
 
-local nwm = require("luci.model.network").init()
-local fwm = require("luci.model.firewall").init()
-local chnroute = uci:get_first("chinadns", "chinadns", "chnroute")
-
-m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Access Control")})
+m = Map(lib.name, "%s - %s" %{translate("ShadowSocks"), translate("Access Control")})
 
 -- [[ Zone WAN ]]--
 s = m:section(TypedSection, "access_control", translate("Zone WAN"))

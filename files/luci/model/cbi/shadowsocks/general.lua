@@ -2,9 +2,9 @@
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
-local shadowsocks = "shadowsocks"
+local lib = require("luci.model.cbi.shadowsocks.lib")
 local ipkg = require("luci.model.ipkg")
-local uci = luci.model.uci.cursor()
+
 local server_table = {}
 local encrypt_methods = {
 	"table",
@@ -25,27 +25,16 @@ local encrypt_methods = {
 	"chacha20-ietf",
 }
 
-function is_running(name)
-	return luci.sys.call("pidof %s >/dev/null" %{name}) == 0
-end
-
 function get_status(name)
-	if is_running(name) then
-		return translate("RUNNING")
-	end
-	return translate("NOT RUNNING")
+	return lib.is_running(name) and translate("RUNNING") or translate("NOT RUNNING")
 end
 
-function has_bin(name)
-	return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
-end
-
-if not has_bin("ss-redir") then
-	return Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"),
+if not lib.has_bin("ss-redir") then
+	return Map(lib.name, "%s - %s" %{translate("ShadowSocks"),
 		translate("General Settings")}, '<b style="color:red">ss-redir not found.</b>')
 end
 
-uci:foreach(shadowsocks, "servers", function(s)
+lib.uci:foreach(lib.name, "servers", function(s)
 	if s.alias then
 		server_table[s[".name"]] = s.alias
 	elseif s.server and s.server_port then
@@ -53,7 +42,7 @@ uci:foreach(shadowsocks, "servers", function(s)
 	end
 end)
 
-m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("General Settings")})
+m = Map(lib.name, "%s - %s" %{translate("ShadowSocks"), translate("General Settings")})
 
 -- [[ Running Status ]]--
 s = m:section(TypedSection, "global", translate("Running Status"))
@@ -95,7 +84,7 @@ o = s:option(Flag, "auth", translate("Onetime Authentication"))
 o.rmempty = false
 
 o = s:option(Value, "server", translate("Server Address"))
-o.datatype = "ip4addr"
+o.datatype = "ipaddr"
 o.rmempty = false
 
 o = s:option(Value, "server_port", translate("Server Port"))
@@ -120,7 +109,7 @@ o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
 o.rmempty = false
 
-if not has_bin("ss-tunnel") then
+if not lib.has_bin("ss-tunnel") then
 	return m
 end
 
