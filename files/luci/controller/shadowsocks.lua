@@ -16,7 +16,11 @@ function index()
 		cbi("shadowsocks/general"),
 		_("General Settings"), 10).leaf = true
 
+	entry({"admin", "services", "shadowsocks", "servers-manage"},
+		cbi("shadowsocks/servers-manage"),
+		_("Servers Manage"), 20).leaf = true
+
 	entry({"admin", "services", "shadowsocks", "access-control"},
 		cbi("shadowsocks/access-control"),
-		_("Access Control"), 20).leaf = true
+		_("Access Control"), 30).leaf = true
 end

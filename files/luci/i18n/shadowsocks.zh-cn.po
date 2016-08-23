@@ -25,9 +25,6 @@ msgstr "目标地址"
 msgid "Direct"
 msgstr "直接连接"
 
-msgid "Disable ShadowSocks"
-msgstr "停用ShadowSocks"
-
 msgid "Disable"
 msgstr "停用"
 
@@ -43,12 +40,6 @@ msgstr "强制走代理IP"
 msgid "Global"
 msgstr "全局代理"
 
-msgid "Global Server"
-msgstr "全局服务器"
-
-msgid "Global Setting"
-msgstr "全局设置"
-
 msgid "Host"
 msgstr "主机"
 
@@ -57,6 +48,9 @@ msgstr "内网主机"
 
 msgid "Local Port"
 msgstr "本地端口"
+
+msgid "Main Server"
+msgstr "主服务器"
 
 msgid "Normal"
 msgstr "正常代理"
@@ -82,17 +76,20 @@ msgstr "运行中"
 msgid "Running Status"
 msgstr "运行状态"
 
-msgid "Same as Global Server"
-msgstr "与全局服务器相同"
+msgid "Same as Main Server"
+msgstr "与主服务器相同"
+
+msgid "Server"
+msgstr "服务器"
 
 msgid "Server Address"
 msgstr "服务器地址"
 
+msgid "Servers Manage"
+msgstr "服务器管理"
+
 msgid "Server Port"
 msgstr "服务器端口"
-
-msgid "Servers Setting"
-msgstr "服务器配置"
 
 msgid "ShadowSocks"
 msgstr "影梭"

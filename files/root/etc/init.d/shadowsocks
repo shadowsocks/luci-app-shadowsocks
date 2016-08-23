@@ -11,8 +11,7 @@ STOP=15
 
 NAME=shadowsocks
 EXTRA_COMMANDS=rules
-GLOBAL_CONFIG_FILE=/var/etc/$NAME.json
-UDP_RELAY_CONFIG_FILE=/var/etc/$NAME-udp.json
+CONFIG_FILE=/var/etc/$NAME.json
 
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
@@ -31,7 +30,7 @@ get_arg_ota() {
 }
 
 gen_config_file() {
-	cat <<-EOF >$2
+	cat <<-EOF >$CONFIG_FILE
 		{
 		    "server": "$(uci_get_by_name $1 server)",
 		    "server_port": $(uci_get_by_name $1 server_port),
@@ -52,14 +51,18 @@ gen_lan_hosts() {
 }
 
 start_rules() {
-	local server=$(uci_get_by_name $GLOBAL_SERVER server)
-	local local_port=$(uci_get_by_name $GLOBAL_SERVER local_port)
-	if [ "$GLOBAL_SERVER" = "$UDP_RELAY_SERVER" ]; then
-		ARG_UDP="-u"
-	elif [ -n "$UDP_RELAY_SERVER" ]; then
-		ARG_UDP="-U"
-		local udp_server=$(uci_get_by_name $UDP_RELAY_SERVER server)
-		local udp_local_port=$(uci_get_by_name $UDP_RELAY_SERVER local_port)
+	local arg_udp
+	local main_server=$(uci_get_by_type transparent_proxy main_server)
+	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
+	local server=$(uci_get_by_name $main_server server)
+	local local_port=$(uci_get_by_name $main_server local_port)
+	[ "$udp_relay_server" = "same" ] && udp_relay_server=$main_server
+	if [ "$udp_relay_server" = "$main_server" ]; then
+		arg_udp="-u"
+	elif [ -n "$udp_relay_server" ]; then
+		arg_udp="-U"
+		local udp_server=$(uci_get_by_name $udp_relay_server server)
+		local udp_local_port=$(uci_get_by_name $udp_relay_server local_port)
 	fi
 	config_load $NAME
 	/usr/bin/ss-rules \
@@ -74,50 +77,51 @@ start_rules() {
 		-d "$(uci_get_by_type access_control lan_target)" \
 		-a "$(echo $(config_foreach gen_lan_hosts lan_hosts))" \
 		-e "$(uci_get_by_type access_control ipt_ext)" \
-		-o $ARG_UDP
+		-o $arg_udp
 		local ret=$?
 		[ "$ret" = 0 ] || /usr/bin/ss-rules -f
 	return $ret
 }
 
 rules() {
-	if !(command -v ss-redir >/dev/null 2>&1); then
-		logger -st $NAME -p3 "ss-redir not found."
+	if [ -z "$(pidof ss-redir 2>/dev/null)" ]; then
+		logger -st $NAME -p3 "ss-redir not running."
 		return 1
 	fi
-	GLOBAL_SERVER=$(uci_get_by_type global global_server)
-	[ "$GLOBAL_SERVER" = "nil" ] && exit 0
-	mkdir -p /var/run /var/etc
-	UDP_RELAY_SERVER=$(uci_get_by_type global udp_relay_server)
-	[ "$UDP_RELAY_SERVER" = "same" ] && UDP_RELAY_SERVER=$GLOBAL_SERVER
 	start_rules
 }
 
 start_redir() {
-	gen_config_file $1 $2
-	ss-redir -c $2 $3 $(get_arg_ota $1) -f /var/run/ss-redir$4.pid
+	gen_config_file $1
+	ss-redir -c $CONFIG_FILE $2 $(get_arg_ota $1) -f /var/run/ss-redir$3.pid
 }
 
 redir() {
-	case "$ARG_UDP" in
-		-u)
-			start_redir $GLOBAL_SERVER $GLOBAL_CONFIG_FILE -u
-			;;
-		-U)
-			start_redir $GLOBAL_SERVER $GLOBAL_CONFIG_FILE
-			start_redir $UDP_RELAY_SERVER $UDP_RELAY_CONFIG_FILE -U -udp
-			;;
-		*)
-			start_redir $GLOBAL_SERVER $GLOBAL_CONFIG_FILE
-			;;
-	esac
+	if !(command -v ss-redir >/dev/null 2>&1); then
+		logger -st $NAME -p3 "ss-redir not found."
+		return 1
+	fi
+	mkdir -p /var/run /var/etc
+	local main_server=$(uci_get_by_type transparent_proxy main_server)
+	[ "$main_server" = "nil" ] && return 1
+	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
+	[ "$udp_relay_server" = "same" ] && udp_relay_server=$main_server
+	if [ "$udp_relay_server" = "$main_server" ]; then
+		start_redir $main_server -u
+	elif [ -n "$udp_relay_server" ]; then
+		start_redir $main_server
+		start_redir $udp_relay_server -U -udp
+	else
+		start_redir $main_server
+	fi
 }
 
 start_tunnel() {
-	ss-tunnel -c $2 $3 $(get_arg_ota $1) \
+	gen_config_file $1
+	ss-tunnel -c $CONFIG_FILE -u $(get_arg_ota $1) \
 		-l $(uci_get_by_type port_forward local_port 5300) \
 		-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
-		-f /var/run/ss-tunnel$4.pid
+		-f /var/run/ss-tunnel.pid
 }
 
 tunnel() {
@@ -125,22 +129,13 @@ tunnel() {
 		logger -st $NAME -p3 "ss-tunnel not found."
 		return 0
 	fi
-	case "$ARG_UDP" in
-		-U)
-			start_tunnel $GLOBAL_SERVER $GLOBAL_CONFIG_FILE
-			start_tunnel $UDP_RELAY_SERVER $UDP_RELAY_CONFIG_FILE -U -udp
-			;;
-		*)
-			start_tunnel $GLOBAL_SERVER $GLOBAL_CONFIG_FILE -u
-			;;
-	esac
+	local server=$(uci_get_by_type port_forward server)
+	[ -z "$server" ] || start_tunnel $server
 }
 
 start() {
-	rules && redir || return 1
-	case "$(uci_get_by_type port_forward enable)" in
-		1|on|true|yes|enabled) tunnel;;
-	esac
+	redir && rules
+	tunnel
 }
 
 kill_pid() {
@@ -156,5 +151,4 @@ stop() {
 	kill_pid /var/run/ss-redir.pid
 	kill_pid /var/run/ss-redir-udp.pid
 	kill_pid /var/run/ss-tunnel.pid
-	kill_pid /var/run/ss-tunnel-udp.pid
 }
