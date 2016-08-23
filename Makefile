@@ -48,6 +48,7 @@ define Package/luci-app-shadowsocks/postinst
 if [ -z "$${IPKG_INSTROOT}" ]; then
 	. /etc/uci-defaults/luci-shadowsocks
 	rm -f /etc/uci-defaults/luci-shadowsocks
+	rm -rf /tmp/luci-modulecache /tmp/luci-indexcache
 fi
 exit 0
 endef
