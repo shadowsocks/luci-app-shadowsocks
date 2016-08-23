@@ -31,15 +31,16 @@ OpenWrt LuCI for Shadowsocks-libev
                 └── model/
                     └── cbi/
                         └── shadowsocks/
-                            ├── access-control.lua // LuCI 访问控制
-                            └── general.lua        // LuCI 基本设置
+                            ├── general.lua        // LuCI 基本设置
+                            ├── servers-manage.lua // LuCI 服务器管理
+                            └── access-control.lua // LuCI 访问控制
 ```
 
 依赖
 ---
 
  1. `ss-redir` 必需  
-    init 脚本执行时会先检查 `ss-redir` 是否存在,
+    init 脚本执行时会先检查 `ss-redir` 是否存在.  
     如果存在则使用 `ss-rules` 生成代理转发规则并启动相应的进程,
     否则包括 LuCI 在内的所有功能都将无法使用.
 

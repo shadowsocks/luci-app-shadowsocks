@@ -99,7 +99,7 @@ start_redir() {
 redir() {
 	if !(command -v ss-redir >/dev/null 2>&1); then
 		logger -st $NAME -p3 "ss-redir not found."
-		return 1
+		exit 1
 	fi
 	mkdir -p /var/run /var/etc
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
