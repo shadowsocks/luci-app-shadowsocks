@@ -2,7 +2,7 @@
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
-local name = "shadowsocks"
+local shadowsocks = "shadowsocks"
 
 local encrypt_methods = {
 	"table",
@@ -23,7 +23,7 @@ local encrypt_methods = {
 	"chacha20-ietf",
 }
 
-m = Map(name, "%s - %s" %{translate("ShadowSocks"), translate("Servers Manage")})
+m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Servers Manage")})
 
 -- [[ Servers Manage ]]--
 s = m:section(TypedSection, "servers")
@@ -41,11 +41,6 @@ o.rmempty = false
 
 o = s:option(Value, "server_port", translate("Server Port"))
 o.datatype = "port"
-o.rmempty = false
-
-o = s:option(Value, "local_port", translate("Local Port"))
-o.datatype = "port"
-o.default = 1080
 o.rmempty = false
 
 o = s:option(Value, "timeout", translate("Connection Timeout"))

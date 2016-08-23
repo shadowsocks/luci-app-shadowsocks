@@ -2,12 +2,12 @@
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
-local name = "shadowsocks"
+local shadowsocks = "shadowsocks"
 local uci = luci.model.uci.cursor()
 local nwm = require("luci.model.network").init()
 local chnroute = uci:get_first("chinadns", "chinadns", "chnroute")
 
-m = Map(name, "%s - %s" %{translate("ShadowSocks"), translate("Access Control")})
+m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Access Control")})
 
 -- [[ Zone WAN ]]--
 s = m:section(TypedSection, "access_control", translate("Zone WAN"))
