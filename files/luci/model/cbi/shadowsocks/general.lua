@@ -76,7 +76,7 @@ if has_redir then
 		o:value("same", translate("Same as Main Server"))
 		for k, v in pairs(server_table) do o:value(k, v) end
 	else
-		o:value("", translate("Unusable - Missing iptables-mod-tproxy"))
+		o:value("nil", translate("Unusable - Missing iptables-mod-tproxy"))
 	end
 	o.default = "nil"
 	o.rmempty = false
