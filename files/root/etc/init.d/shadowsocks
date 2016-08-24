@@ -59,14 +59,14 @@ start_rules() {
 		arg_udp="-u"
 	elif [ -n "$udp_relay_server" ]; then
 		arg_udp="-U"
-		local udp_server=$(uci_get_by_name $udp_relay_server server)
+		local udp_server_ip=$(uci_get_by_name $udp_relay_server server)
 	fi
 	config_load $NAME
 	/usr/bin/ss-rules \
 		-s "$(uci_get_by_name $main_server server)" \
 		-l "$local_port" \
-		-S "$udp_server" \
-		-L "${udp_server:+$local_port}" \
+		-S "$udp_server_ip" \
+		-L "${udp_server_ip:+$local_port}" \
 		-i "$(uci_get_by_type access_control wan_bp_list)" \
 		-b "$(uci_get_by_type access_control wan_bp_ips)" \
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \

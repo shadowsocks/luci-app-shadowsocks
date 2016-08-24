@@ -126,15 +126,16 @@ include_ac_rules() {
 	:SS_SPEC_LAN_AC - [0:0]
 	:SS_SPEC_WAN_AC - [0:0]
 	:SS_SPEC_WAN_FW - [0:0]
+	-A SS_SPEC_LAN_DG -m set --match-set ss_spec_dst_sp dst -j RETURN
 	-A SS_SPEC_LAN_DG -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
 	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_bp src -j RETURN
 	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_fw src -j SS_SPEC_WAN_FW
 	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_ac src -j SS_SPEC_WAN_AC
 	-A SS_SPEC_LAN_AC -j ${LAN_TARGET:=SS_SPEC_WAN_AC}
+	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_sp dst -j RETURN
 	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_fw dst -j SS_SPEC_WAN_FW
 	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_bp dst -j RETURN
 	-A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
-	-A SS_SPEC_WAN_FW -m set --match-set ss_spec_dst_sp dst -j RETURN
 	COMMIT
 EOF
 }
