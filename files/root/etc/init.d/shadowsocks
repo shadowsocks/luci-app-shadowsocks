@@ -149,6 +149,7 @@ start() {
 	ss_redir && rules
 	ss_local
 	ss_tunnel
+	rm -f $CONFIG_FILE
 }
 
 kill_pid() {
