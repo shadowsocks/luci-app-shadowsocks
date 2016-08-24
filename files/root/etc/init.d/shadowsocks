@@ -57,7 +57,7 @@ start_rules() {
 	[ "$udp_relay_server" = "same" ] && udp_relay_server=$main_server
 	if [ "$udp_relay_server" = "$main_server" ]; then
 		arg_udp="-u"
-	elif [ -n "$udp_relay_server" ]; then
+	elif [ -n "$udp_relay_server" -a "$udp_relay_server" != "nil" ]; then
 		arg_udp="-U"
 		local udp_server_ip=$(uci_get_by_name $udp_relay_server server)
 	fi
@@ -97,17 +97,15 @@ start_redir() {
 
 ss_redir() {
 	if !(command -v ss-redir >/dev/null 2>&1); then
-		logger -st $NAME -p3 "ss-redir not found."
-		exit 1
+		return 1
 	fi
-	mkdir -p /var/run /var/etc
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
 	[ -z "$main_server" -o "$main_server" = "nil" ] && return 1
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
 	[ "$udp_relay_server" = "same" ] && udp_relay_server=$main_server
 	if [ "$udp_relay_server" = "$main_server" ]; then
 		start_redir $main_server -u
-	elif [ -n "$udp_relay_server" ]; then
+	elif [ -n "$udp_relay_server" -a "$udp_relay_server" != "nil" ]; then
 		start_redir $main_server
 		start_redir $udp_relay_server -U -udp
 	else
@@ -124,11 +122,10 @@ start_local() {
 
 ss_local() {
 	if !(command -v ss-local >/dev/null 2>&1); then
-		logger -st $NAME -p5 "ss-local not found."
 		return 0
 	fi
 	local server=$(uci_get_by_type socks5_proxy server)
-	[ -z "$server" ] || start_local $server
+	[ -z "$server" -o "$server" = "nil" ] || start_local $server
 }
 
 start_tunnel() {
@@ -141,14 +138,14 @@ start_tunnel() {
 
 ss_tunnel() {
 	if !(command -v ss-tunnel >/dev/null 2>&1); then
-		logger -st $NAME -p5 "ss-tunnel not found."
 		return 0
 	fi
 	local server=$(uci_get_by_type port_forward server)
-	[ -z "$server" ] || start_tunnel $server
+	[ -z "$server" -o "$server" = "nil" ] || start_tunnel $server
 }
 
 start() {
+	mkdir -p /var/run /var/etc
 	ss_redir && rules
 	ss_local
 	ss_tunnel

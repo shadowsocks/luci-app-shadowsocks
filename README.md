@@ -1,14 +1,14 @@
 OpenWrt LuCI for Shadowsocks-libev
 ===
 
-[![Download][B]][D]
+[![Download][badge]][download]
 
 特性
 ---
 
-软件包不包含 [shadowsocks-libev][L] 的可执行文件,
+软件包不包含 [shadowsocks-libev][ssl] 的可执行文件,
 需要用户自行添加 `ss-redir`, `ss-local` 和 `ss-tunnel` 到 `$PATH` 中.  
-可执行文件可通过安装 [openwrt-shadowsocks][O] 提供的 `shadowsocks-libev` 获得.  
+可执行文件可通过安装 [openwrt-shadowsocks][oss] 提供的 `shadowsocks-libev` 获得.  
 
 软件包文件结构:
 ```
@@ -39,18 +39,16 @@ OpenWrt LuCI for Shadowsocks-libev
 依赖
 ---
 
- 1. `ss-redir` 必需  
-    init 脚本执行时会先检查 `ss-redir` 是否存在.  
-    如果存在则使用 `ss-rules` 生成代理转发规则并启动相应的进程,
-    否则包括 LuCI 在内的所有功能都将无法使用.
+ 1. `ss-redir` 可选  
+    如果存在, 则可以使用透明代理功能并使用 [ss-rules][ssr] 生成代理转发规则,
+    同时支持访问控制设置,
+    否则此功能将不可用, LuCI 中将不显示对应设置和访问控制.
 
  2. `ss-local` 可选  
-    如果检查到存在 `ss-local`, 则可以使用 SOCKS5 代理功能,
-    否则此功能将不可用, LuCI 中将不显示对应设置.
+    如果存在, 则可以使用 SOCKS5 代理功能, 否则此功能将不可用, LuCI 中将不显示对应设置.
 
  3. `ss-tunnel` 可选  
-    如果检查到存在 `ss-tunnel`, 则可以使用端口转发功能,
-    否则此功能将不可用, LuCI 中将不显示对应设置.
+    如果存在, 则可以使用端口转发功能, 否则此功能将不可用, LuCI 中将不显示对应设置.
 
 注: 默认情况下, `ss-redir`, `ss-local` 和 `ss-tunnel` 在以下径下, 都可被正确调用
 ```
@@ -60,10 +58,17 @@ OpenWrt LuCI for Shadowsocks-libev
 /usr/sbin
 ```
 
+配置
+---
+
+配置文件路径: `/etc/config/shadowsocks`  
+此文件为 UCI 配置文件, 配置方式可参考 [Wiki][uus] 和 [OpenWrt Wiki][uci]  
+LuCI 的访问控制设置可以参考 [Wiki][lac]  
+
 编译
 ---
 
-从 OpenWrt 的 [SDK][S] 编译  
+从 OpenWrt 的 [SDK][sdk] 编译  
 ```bash
 # 解压下载好的 SDK
 tar xjf OpenWrt-SDK-ar71xx-for-linux-x86_64-gcc-4.8-linaro_uClibc-0.9.33.2.tar.bz2
@@ -81,8 +86,12 @@ make package/luci-app-shadowsocks/compile V=99
 ```
 
 
-  [L]: https://github.com/shadowsocks/shadowsocks-libev
-  [O]: https://github.com/shadowsocks/openwrt-shadowsocks
-  [S]: http://wiki.openwrt.org/doc/howto/obtain.firmware.sdk
-  [B]: https://api.bintray.com/packages/aa65535/opkg/luci-app-shadowsocks/images/download.svg
-  [D]: https://bintray.com/aa65535/opkg/luci-app-shadowsocks/_latestVersion
+  [ssl]: https://github.com/shadowsocks/shadowsocks-libev
+  [oss]: https://github.com/shadowsocks/openwrt-shadowsocks
+  [sdk]: http://wiki.openwrt.org/doc/howto/obtain.firmware.sdk
+  [badge]: https://api.bintray.com/packages/aa65535/opkg/luci-app-shadowsocks/images/download.svg
+  [download]: https://bintray.com/aa65535/opkg/luci-app-shadowsocks/_latestVersion
+  [ssr]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Instruction-of-ss-rules
+  [uus]: https://github.com/shadowsocks/openwrt-shadowsocks/wiki/Use-UCI-system
+  [uci]: https://wiki.openwrt.org/doc/uci
+  [lac]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/LuCI-Access-Control
