@@ -55,9 +55,9 @@ flush_r() {
 
 ipset_r() {
 	ipset -! restore <<-EOF || return 1
-		create ss_spec_src_ac hash:net hashsize 64
-		create ss_spec_src_bp hash:net hashsize 64
-		create ss_spec_src_fw hash:net hashsize 64
+		create ss_spec_src_ac hash:ip hashsize 64
+		create ss_spec_src_bp hash:ip hashsize 64
+		create ss_spec_src_fw hash:ip hashsize 64
 		create ss_spec_dst_sp hash:net hashsize 64
 		create ss_spec_dst_bp hash:net hashsize 64
 		create ss_spec_dst_fw hash:net hashsize 64
