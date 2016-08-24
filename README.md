@@ -97,6 +97,6 @@ make package/luci-app-shadowsocks/compile V=99
  [badge]: https://api.bintray.com/packages/aa65535/opkg/luci-app-shadowsocks/images/download.svg
  [download]: https://bintray.com/aa65535/opkg/luci-app-shadowsocks/_latestVersion
  [ssr]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Instruction-of-ss-rules
- [uus]: https://github.com/shadowsocks/openwrt-shadowsocks/wiki/Use-UCI-system
+ [uus]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Use-UCI-system
  [uci]: https://wiki.openwrt.org/doc/uci
  [lac]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/LuCI-Access-Control
