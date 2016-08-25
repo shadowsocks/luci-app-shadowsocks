@@ -8,10 +8,6 @@ function index()
 		return
 	end
 
-	local function has_bin(name)
-		return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
-	end
-
 	entry({"admin", "services", "shadowsocks"},
 		alias("admin", "services", "shadowsocks", "general"),
 		_("ShadowSocks"), 10).dependent = true
@@ -24,7 +20,7 @@ function index()
 		cbi("shadowsocks/servers-manage"),
 		_("Servers Manage"), 20).leaf = true
 
-	if not has_bin("ss-redir") then
+	if luci.sys.call("command -v ss-redir >/dev/null") ~= 0 then
 		return
 	end
 

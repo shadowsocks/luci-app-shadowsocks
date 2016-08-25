@@ -153,17 +153,18 @@ start() {
 }
 
 kill_pid() {
-	local pid=$(cat $1 2>/dev/null)
-	rm -f $1
-	if [ -n "$pid" -a -d "/proc/$pid" ]; then
-		kill -9 $pid
-	fi
+	while [ -n "$1" ]; do
+		local pid=$(cat $1 2>/dev/null)
+		rm -f $1
+		[ -n "$pid" -a -d "/proc/$pid" ] && kill -9 $pid
+		shift
+	done
 }
 
 stop() {
 	/usr/bin/ss-rules -f
-	kill_pid /var/run/ss-redir.pid
-	kill_pid /var/run/ss-redir-udp.pid
-	kill_pid /var/run/ss-local.pid
-	kill_pid /var/run/ss-tunnel.pid
+	kill_pid /var/run/ss-redir.pid \
+		/var/run/ss-redir-udp.pid \
+		/var/run/ss-local.pid \
+		/var/run/ss-tunnel.pid
 }

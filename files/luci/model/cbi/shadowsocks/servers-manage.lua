@@ -3,7 +3,6 @@
 
 local m, s, o
 local shadowsocks = "shadowsocks"
-
 local encrypt_methods = {
 	"table",
 	"rc4",
