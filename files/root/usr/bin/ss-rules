@@ -15,9 +15,9 @@ usage() {
 
 		Valid options are:
 
-		    -s <server_ip>          ip address of shadowsocks remote server
+		    -s <server_ips>         ip address of shadowsocks remote server
 		    -l <local_port>         port number of shadowsocks local server
-		    -S <server_ip>          ip address of shadowsocks remote UDP server
+		    -S <server_ips>         ip address of shadowsocks remote UDP server
 		    -L <local_port>         port number of shadowsocks local UDP server
 		    -i <ip_list_file>       a file whose content is bypassed ip list
 		    -b <wan_ips>            wan ip of will be bypassed
@@ -179,13 +179,13 @@ EOF
 while getopts ":s:l:S:L:i:b:w:I:d:a:e:ouUfh" arg; do
 	case "$arg" in
 		s)
-			server=$OPTARG
+			server=$(for ip in $OPTARG; do echo $ip; done)
 			;;
 		l)
 			local_port=$OPTARG
 			;;
 		S)
-			SERVER=$OPTARG
+			SERVER=$(for ip in $OPTARG; do echo $ip; done)
 			;;
 		L)
 			LOCAL_PORT=$OPTARG
@@ -233,7 +233,7 @@ done
 [ -z "$server" -o -z "$local_port" ] && usage 2
 
 if [ "$TPROXY" = 1 ]; then
-	SERVER=$server
+	unset SERVER
 	LOCAL_PORT=$local_port
 elif [ "$TPROXY" = 2 ]; then
 	: ${SERVER:?"You must assign an ip for the udp relay server."}

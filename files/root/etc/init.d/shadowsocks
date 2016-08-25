@@ -49,24 +49,28 @@ gen_lan_hosts() {
 	esac
 }
 
+get_server_ips() {
+	echo $(uci_get_by_name $1 server)
+}
+
 start_rules() {
 	local arg_udp
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
-	local local_port=$(uci_get_by_type transparent_proxy local_port 1234)
 	[ "$udp_relay_server" = "same" ] && udp_relay_server=$main_server
 	if [ "$udp_relay_server" = "$main_server" ]; then
 		arg_udp="-u"
 	elif [ -n "$udp_relay_server" -a "$udp_relay_server" != "nil" ]; then
 		arg_udp="-U"
-		local udp_server_ip=$(uci_get_by_name $udp_relay_server server)
 	fi
 	config_load $NAME
+	local server_ips=$(echo $(config_foreach get_server_ips servers))
+	local local_port=$(uci_get_by_type transparent_proxy local_port 1234)
 	/usr/bin/ss-rules \
-		-s "$(uci_get_by_name $main_server server)" \
+		-s "$server_ips" \
 		-l "$local_port" \
-		-S "$udp_server_ip" \
-		-L "${udp_server_ip:+$local_port}" \
+		-S "$server_ips" \
+		-L "$local_port" \
 		-i "$(uci_get_by_type access_control wan_bp_list)" \
 		-b "$(uci_get_by_type access_control wan_bp_ips)" \
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
