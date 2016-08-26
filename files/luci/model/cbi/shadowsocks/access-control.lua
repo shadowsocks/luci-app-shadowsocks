@@ -22,9 +22,11 @@ o.rmempty = false
 
 o = s:option(DynamicList, "wan_bp_ips", translate("Bypassed IP"))
 o.datatype = "ip4addr"
+o.rmempty = true
 
 o = s:option(DynamicList, "wan_fw_ips", translate("Forwarded IP"))
 o.datatype = "ip4addr"
+o.rmempty = true
 
 -- [[ Zone LAN ]]--
 s = m:section(TypedSection, "access_control", translate("Zone LAN"))
@@ -45,6 +47,7 @@ o = s:option(ListValue, "lan_target", translate("Proxy Type"))
 o:value("SS_SPEC_WAN_AC", translate("Normal"))
 o:value("RETURN", translate("Direct"))
 o:value("SS_SPEC_WAN_FW", translate("Global"))
+o.rmempty = false
 
 -- [[ LAN Hosts ]]--
 s = m:section(TypedSection, "lan_hosts", translate("LAN Hosts"))

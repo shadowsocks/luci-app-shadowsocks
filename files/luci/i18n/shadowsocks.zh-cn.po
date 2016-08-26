@@ -97,6 +97,9 @@ msgstr "影梭"
 msgid "SOCKS5 Proxy"
 msgstr "SOCKS5代理"
 
+msgid "TCP Fast Open"
+msgstr "TCP快速打开"
+
 msgid "Transparent Proxy"
 msgstr "透明代理"
 

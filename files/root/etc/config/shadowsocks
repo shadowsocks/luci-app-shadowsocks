@@ -14,11 +14,12 @@ config port_forward
 	option destination '8.8.4.4:53'
 
 config servers
-	option auth_enable '0'
+	option auth '0'
+	option fast_open '0'
 	option server '127.0.0.1'
 	option server_port '8388'
-	option password 'barfoo!'
 	option timeout '60'
+	option password 'barfoo!'
 	option encrypt_method 'rc4-md5'
 
 config access_control
