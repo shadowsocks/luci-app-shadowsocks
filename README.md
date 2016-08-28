@@ -18,8 +18,10 @@ OpenWrt LuCI for Shadowsocks-libev
 ├── etc/
 │   ├── config/
 │   │   └── shadowsocks                            // UCI 配置文件
-│   └── init.d/
-│       └── shadowsocks                            // init 脚本
+│   │── init.d/
+│   │   └── shadowsocks                            // init 脚本
+│   └── uci-defaults/
+│       └── luci-shadowsocks                       // uci-defaults 脚本
 └── usr/
     ├── bin/
     │   └── ss-rules                               // 生成代理转发规则的脚本

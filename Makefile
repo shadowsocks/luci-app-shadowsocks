@@ -46,7 +46,7 @@ endef
 define Package/luci-app-shadowsocks/postinst
 #!/bin/sh
 if [ -f ${IPKG_INSTROOT}/etc/uci-defaults/luci-shadowsocks ]; then
-	( . ${IPKG_INSTROOT}/etc/uci-defaults/luci-shadowsocks )
+	( . ${IPKG_INSTROOT}/etc/uci-defaults/luci-shadowsocks ) && \
 	rm -f ${IPKG_INSTROOT}/etc/uci-defaults/luci-shadowsocks
 fi
 if [ -z "${IPKG_INSTROOT}" ]; then
