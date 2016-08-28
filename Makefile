@@ -45,10 +45,12 @@ endef
 
 define Package/luci-app-shadowsocks/postinst
 #!/bin/sh
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	. /etc/uci-defaults/luci-shadowsocks
-	rm -f /etc/uci-defaults/luci-shadowsocks
-	rm -rf /tmp/luci-modulecache /tmp/luci-indexcache
+if [ -f ${IPKG_INSTROOT}/etc/uci-defaults/luci-shadowsocks ]; then
+	( . ${IPKG_INSTROOT}/etc/uci-defaults/luci-shadowsocks )
+	rm -f ${IPKG_INSTROOT}/etc/uci-defaults/luci-shadowsocks
+fi
+if [ -z "${IPKG_INSTROOT}" ]; then
+	rm -rf /tmp/luci-indexcache /tmp/luci-modulecache
 fi
 exit 0
 endef
