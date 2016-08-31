@@ -23,6 +23,11 @@ uci_get_by_type() {
 	echo ${ret:=$3}
 }
 
+valid_server() {
+	[ "$(uci get $NAME.$1 2>/dev/null)" = "servers" ]
+	return $?
+}
+
 get_arg_ota() {
 	case "$(uci_get_by_name $1 auth)" in
 		1|on|true|yes|enabled) echo "-A";;
@@ -64,11 +69,12 @@ get_server_ips() {
 start_rules() {
 	local arg_udp
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
+	valid_server $main_server || return 0
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
 	[ "$udp_relay_server" = "same" ] && udp_relay_server=$main_server
 	if [ "$udp_relay_server" = "$main_server" ]; then
 		arg_udp="-u"
-	elif [ -n "$udp_relay_server" -a "$udp_relay_server" != "nil" ]; then
+	elif valid_server $udp_relay_server; then
 		arg_udp="-U"
 	fi
 	config_load $NAME
@@ -93,7 +99,7 @@ start_rules() {
 }
 
 rules() {
-	if [ -z "$(pidof ss-redir 2>/dev/null)" ]; then
+	if !(pidof ss-redir >/dev/null 2>&1); then
 		logger -st $NAME -p3 "ss-redir not running."
 		return 1
 	fi
@@ -112,12 +118,12 @@ ss_redir() {
 		return 1
 	fi
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
-	[ -z "$main_server" -o "$main_server" = "nil" ] && return 1
+	valid_server $main_server || return 1
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
 	[ "$udp_relay_server" = "same" ] && udp_relay_server=$main_server
 	if [ "$udp_relay_server" = "$main_server" ]; then
 		start_redir $main_server -u
-	elif [ -n "$udp_relay_server" -a "$udp_relay_server" != "nil" ]; then
+	elif valid_server $udp_relay_server; then
 		start_redir $main_server
 		start_redir $udp_relay_server -U -udp
 	else
@@ -137,7 +143,7 @@ ss_local() {
 		return 0
 	fi
 	local server=$(uci_get_by_type socks5_proxy server)
-	[ -z "$server" -o "$server" = "nil" ] || start_local $server
+	valid_server $server && start_local $server
 }
 
 start_tunnel() {
@@ -153,7 +159,7 @@ ss_tunnel() {
 		return 0
 	fi
 	local server=$(uci_get_by_type port_forward server)
-	[ -z "$server" -o "$server" = "nil" ] || start_tunnel $server
+	valid_server $server && start_tunnel $server
 }
 
 start() {
@@ -164,19 +170,14 @@ start() {
 	rm -f $CONFIG_FILE
 }
 
-kill_pid() {
+kill_all() {
 	while [ -n "$1" ]; do
-		local pid=$(cat $1 2>/dev/null)
-		rm -f $1
-		[ -n "$pid" -a -d "/proc/$pid" ] && kill -9 $pid
+		pidof $1 >/dev/null 2>&1 && killall -9 $1 >/dev/null 2>&1
 		shift
 	done
 }
 
 stop() {
 	/usr/bin/ss-rules -f
-	kill_pid /var/run/ss-redir.pid \
-		/var/run/ss-redir-udp.pid \
-		/var/run/ss-local.pid \
-		/var/run/ss-tunnel.pid
+	kill_all ss-redir ss-local ss-tunnel
 }
