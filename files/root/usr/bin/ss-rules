@@ -6,7 +6,6 @@
 # See /LICENSE for more information.
 #
 
-TAG="SS_SPEC"          # iptables tag
 FWI=$(uci get firewall.shadowsocks.path 2>/dev/null)  # firewall include file
 
 usage() {
@@ -43,10 +42,10 @@ loger() {
 }
 
 flush_r() {
-	iptables-save -c | grep -v "$TAG" | iptables-restore -c
+	iptables-save -c | grep -v "SS_SPEC" | iptables-restore -c
 	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
-	for setname in $(ipset -n list | grep -i "$TAG"); do
+	for setname in $(ipset -n list | grep "ss_spec"); do
 		ipset destroy $setname 2>/dev/null
 	done
 	[ -n "$FWI" ] && echo '#!/bin/sh' >$FWI
@@ -83,26 +82,23 @@ ac_rule() {
 				;;
 		esac
 	done
-	local ipt="iptables -t nat"
 	include_ac_rules nat
 	gen_prerouting_rules nat
-	$ipt -A SS_SPEC_WAN_FW -p tcp \
+	iptables -t nat -A SS_SPEC_WAN_FW -p tcp \
 		-j REDIRECT --to-ports $local_port || return 1
 	if [ "$OUTPUT" = 1 ]; then
-		$ipt -I OUTPUT 1 -p tcp $EXT_ARGS -j SS_SPEC_WAN_AC
+		iptables -t nat -I OUTPUT 1 -p tcp -j SS_SPEC_WAN_DG
 	fi
 	return $?
 }
 
 tp_rule() {
-	[ -n "$TPROXY" ] || return 0
-	lsmod | grep -q TPROXY || return 0
+	[ -n "$TPROXY" ] && lsmod | grep -q TPROXY || return 0
 	ip rule add fwmark 0x01/0x01 table 100
 	ip route add local 0.0.0.0/0 dev lo table 100
-	local ipt="iptables -t mangle"
 	include_ac_rules mangle
 	gen_prerouting_rules mangle
-	$ipt -A SS_SPEC_WAN_FW -p udp \
+	iptables -t mangle -A SS_SPEC_WAN_FW -p udp \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
 	return $?
 }
@@ -111,7 +107,7 @@ gen_include() {
 	[ -n "$FWI" ] || return 0
 	cat <<-CAT >>$FWI
 	iptables-restore -n <<-EOF
-	$(iptables-save | grep -E "$TAG|^\*|^COMMIT" |\
+	$(iptables-save | grep -E "SS_SPEC|^\*|^COMMIT" |\
 			sed -e "s/^-A \(OUTPUT\|PREROUTING\)/-I \1 1/")
 	EOF
 CAT
@@ -124,6 +120,7 @@ include_ac_rules() {
 	*$1
 	:SS_SPEC_LAN_DG - [0:0]
 	:SS_SPEC_LAN_AC - [0:0]
+	:SS_SPEC_WAN_DG - [0:0]
 	:SS_SPEC_WAN_AC - [0:0]
 	:SS_SPEC_WAN_FW - [0:0]
 	-A SS_SPEC_LAN_DG -m set --match-set ss_spec_dst_sp dst -j RETURN
@@ -132,7 +129,8 @@ include_ac_rules() {
 	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_fw src -j SS_SPEC_WAN_FW
 	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_ac src -j SS_SPEC_WAN_AC
 	-A SS_SPEC_LAN_AC -j ${LAN_TARGET:=SS_SPEC_WAN_AC}
-	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_sp dst -j RETURN
+	-A SS_SPEC_WAN_DG -m set --match-set ss_spec_dst_sp dst -j RETURN
+	-A SS_SPEC_WAN_DG -p $protocol $EXT_ARGS -j SS_SPEC_WAN_AC
 	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_fw dst -j SS_SPEC_WAN_FW
 	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_bp dst -j RETURN
 	-A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
