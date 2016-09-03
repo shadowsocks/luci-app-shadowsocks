@@ -6,8 +6,6 @@
 # See /LICENSE for more information.
 #
 
-FWI=$(uci get firewall.shadowsocks.path 2>/dev/null)  # firewall include file
-
 usage() {
 	cat <<-EOF
 		Usage: ss-rules [options]
@@ -41,18 +39,19 @@ loger() {
 	logger -st ss-rules[$$] -p$1 $2
 }
 
-flush_r() {
+flush_rules() {
 	iptables-save -c | grep -v "SS_SPEC" | iptables-restore -c
 	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
 	for setname in $(ipset -n list | grep "ss_spec"); do
 		ipset destroy $setname 2>/dev/null
 	done
-	[ -n "$FWI" ] && echo '#!/bin/sh' >$FWI
+	FWI=$(uci get firewall.shadowsocks.path 2>/dev/null)
+	[ -n "$FWI" ] && echo '# firewall include file' >$FWI
 	return 0
 }
 
-ipset_r() {
+ipset_init() {
 	ipset -! restore <<-EOF || return 1
 		create ss_spec_src_ac hash:ip hashsize 64
 		create ss_spec_src_bp hash:ip hashsize 64
@@ -68,7 +67,7 @@ EOF
 	return 0
 }
 
-ac_rule() {
+ipt_nat() {
 	for host in $LAN_HOSTS; do
 		case "${host:0:1}" in
 			n|N)
@@ -92,18 +91,18 @@ ac_rule() {
 	return $?
 }
 
-tp_rule() {
+ipt_mangle() {
 	[ -n "$TPROXY" ] && lsmod | grep -q TPROXY || return 0
 	ip rule add fwmark 0x01/0x01 table 100
 	ip route add local 0.0.0.0/0 dev lo table 100
 	include_ac_rules mangle
 	gen_prerouting_rules mangle
 	iptables -t mangle -A SS_SPEC_WAN_FW -p udp \
-		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
+		-j TPROXY --on-port $LOCAL_PORT --tproxy-mark 0x01/0x01
 	return $?
 }
 
-gen_include() {
+export_ipt_rules() {
 	[ -n "$FWI" ] || return 0
 	cat <<-CAT >>$FWI
 	iptables-restore -n <<-EOF
@@ -219,7 +218,7 @@ while getopts ":s:l:S:L:i:b:w:I:d:a:e:ouUfh" arg; do
 			TPROXY=2
 			;;
 		f)
-			flush_r
+			flush_rules
 			exit 0
 			;;
 		h)
@@ -238,7 +237,7 @@ elif [ "$TPROXY" = 2 ]; then
 	: ${LOCAL_PORT:?"You must assign a port for the udp relay server."}
 fi
 
-flush_r && ipset_r && ac_rule && tp_rule && gen_include
+flush_rules && ipset_init && ipt_nat && ipt_mangle && export_ipt_rules
 RET=$?
 [ "$RET" = 0 ] || loger 3 "Start failed!"
 exit $RET
