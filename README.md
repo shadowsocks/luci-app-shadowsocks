@@ -1,7 +1,7 @@
 OpenWrt LuCI for Shadowsocks-libev
 ===
 
-[![Download][badge]][download]
+[![Download][download_badge]][download_url]  [![Gitter][gitter_badge]][gitter_url]
 
 特性
 ---
@@ -43,7 +43,10 @@ OpenWrt LuCI for Shadowsocks-libev
 依赖
 ---
 
-软件包是文件级依赖, 当文件存在时, 相应的功能可被使用, LuCI 界面也会显示相应的设置.  
+软件包的正常使用需要依赖 `iptables` 和 `ipset`  
+若需要透明代理支持 UDP 协议, 需要额外安装 `iptables-mod-tproxy` 和 (`ip` or `ip-full`)  
+
+当以下文件存在时, 相应的功能可被使用, LuCI 界面也会显示相应的设置.  
 如果文件不存在, 则对应的功能不可用, LuCI 界面的响应设置也会隐藏.  
 以下三个可执行文件都是可选的, 但是需要至少提供一个.
 
@@ -71,7 +74,7 @@ OpenWrt LuCI for Shadowsocks-libev
 
 软件包的配置文件路径: `/etc/config/shadowsocks`  
 此文件为 UCI 配置文件, 配置方式可参考 [Wiki][uus] 和 [OpenWrt Wiki][uci]  
-启用「透明代理」功能后, 软件包提供了灵活强大的访问控制功能, 设置可参考 [Wiki][lac]  
+透明代理的访问控制功能设置可参考 [Wiki][lac]  
 
 编译
 ---
@@ -93,11 +96,13 @@ make menuconfig
 make package/luci-app-shadowsocks/compile V=99
 ```
 
+ [download_badge]: https://api.bintray.com/packages/aa65535/opkg/luci-app-shadowsocks/images/download.svg
+ [download_url]: https://bintray.com/aa65535/opkg/luci-app-shadowsocks/_latestVersion
+ [gitter_badge]: https://badges.gitter.im/shadowsocks/luci-app-shadowsocks.svg
+ [gitter_url]: https://gitter.im/shadowsocks/luci-app-shadowsocks
  [ssl]: https://github.com/shadowsocks/shadowsocks-libev
  [oss]: https://github.com/shadowsocks/openwrt-shadowsocks
- [sdk]: http://wiki.openwrt.org/doc/howto/obtain.firmware.sdk
- [badge]: https://api.bintray.com/packages/aa65535/opkg/luci-app-shadowsocks/images/download.svg
- [download]: https://bintray.com/aa65535/opkg/luci-app-shadowsocks/_latestVersion
+ [sdk]: https://wiki.openwrt.org/doc/howto/obtain.firmware.sdk
  [ssr]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Instruction-of-ss-rules
  [uus]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Use-UCI-system
  [uci]: https://wiki.openwrt.org/doc/uci
