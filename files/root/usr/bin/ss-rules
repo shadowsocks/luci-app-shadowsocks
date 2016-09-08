@@ -41,8 +41,10 @@ loger() {
 
 flush_rules() {
 	iptables-save -c | grep -v "SS_SPEC" | iptables-restore -c
-	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
-	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
+	if command -v ip >/dev/null 2>&1; then
+		ip rule del fwmark 1 lookup 100 2>/dev/null
+		ip route del local default dev lo table 100 2>/dev/null
+	fi
 	for setname in $(ipset -n list | grep "ss_spec"); do
 		ipset destroy $setname 2>/dev/null
 	done
@@ -59,6 +61,7 @@ ipset_init() {
 		create ss_spec_dst_sp hash:net hashsize 64
 		create ss_spec_dst_bp hash:net hashsize 64
 		create ss_spec_dst_fw hash:net hashsize 64
+		$(gen_lan_host_ipset_entry)
 		$(gen_special_purpose_ip | sed -e "s/^/add ss_spec_dst_sp /")
 		$(sed -e "s/^/add ss_spec_dst_bp /" ${IGNORED:=/dev/null} 2>/dev/null)
 		$(for ip in $WAN_BP_IP; do echo "add ss_spec_dst_bp $ip"; done)
@@ -68,35 +71,28 @@ EOF
 }
 
 ipt_nat() {
-	for host in $LAN_HOSTS; do
-		case "${host:0:1}" in
-			n|N)
-				ipset add ss_spec_src_ac ${host:2}
-				;;
-			b|B)
-				ipset add ss_spec_src_bp ${host:2}
-				;;
-			g|G)
-				ipset add ss_spec_src_fw ${host:2}
-				;;
-		esac
-	done
 	include_ac_rules nat
-	gen_prerouting_rules nat
-	iptables -t nat -A SS_SPEC_WAN_FW -p tcp \
+	ipt="iptables -t nat"
+	$ipt -A SS_SPEC_WAN_FW -p tcp \
 		-j REDIRECT --to-ports $local_port || return 1
 	if [ "$OUTPUT" = 1 ]; then
-		iptables -t nat -I OUTPUT 1 -p tcp -j SS_SPEC_WAN_DG
+		$ipt -N SS_SPEC_WAN_DG
+		$ipt -A SS_SPEC_WAN_DG -m set --match-set ss_spec_dst_sp dst -j RETURN
+		$ipt -A SS_SPEC_WAN_DG -p tcp $EXT_ARGS -j SS_SPEC_WAN_AC
+		$ipt -I OUTPUT 1 -p tcp -j SS_SPEC_WAN_DG
 	fi
 	return $?
 }
 
 ipt_mangle() {
-	[ -n "$TPROXY" ] && lsmod | grep -q TPROXY || return 0
-	ip rule add fwmark 0x01/0x01 table 100
-	ip route add local 0.0.0.0/0 dev lo table 100
+	[ -n "$TPROXY" ] || return 0
+	if !(lsmod | grep -q TPROXY && command -v ip >/dev/null); then
+		loger 4 "TPROXY or ip not found."
+		return 0
+	fi
+	ip rule add fwmark 1 lookup 100
+	ip route add local default dev lo table 100
 	include_ac_rules mangle
-	gen_prerouting_rules mangle
 	iptables -t mangle -A SS_SPEC_WAN_FW -p udp \
 		-j TPROXY --on-port $LOCAL_PORT --tproxy-mark 0x01/0x01
 	return $?
@@ -113,38 +109,20 @@ CAT
 	return $?
 }
 
-include_ac_rules() {
-	local protocol=$([ "$1" = "mangle" ] && echo udp || echo tcp)
-	iptables-restore -n <<-EOF
-	*$1
-	:SS_SPEC_LAN_DG - [0:0]
-	:SS_SPEC_LAN_AC - [0:0]
-	:SS_SPEC_WAN_DG - [0:0]
-	:SS_SPEC_WAN_AC - [0:0]
-	:SS_SPEC_WAN_FW - [0:0]
-	-A SS_SPEC_LAN_DG -m set --match-set ss_spec_dst_sp dst -j RETURN
-	-A SS_SPEC_LAN_DG -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
-	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_bp src -j RETURN
-	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_fw src -j SS_SPEC_WAN_FW
-	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_ac src -j SS_SPEC_WAN_AC
-	-A SS_SPEC_LAN_AC -j ${LAN_TARGET:=SS_SPEC_WAN_AC}
-	-A SS_SPEC_WAN_DG -m set --match-set ss_spec_dst_sp dst -j RETURN
-	-A SS_SPEC_WAN_DG -p $protocol $EXT_ARGS -j SS_SPEC_WAN_AC
-	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_fw dst -j SS_SPEC_WAN_FW
-	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_bp dst -j RETURN
-	-A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
-	COMMIT
-EOF
-}
-
-gen_prerouting_rules() {
-	for ifname in $IFNAMES; do
-		local empty=no
-		iptables -t $1 -I PREROUTING 1 -i $ifname -j SS_SPEC_LAN_DG
+gen_lan_host_ipset_entry() {
+	for host in $LAN_HOSTS; do
+		case "${host:0:1}" in
+			n|N)
+				echo add ss_spec_src_ac ${host:2}
+				;;
+			b|B)
+				echo add ss_spec_src_bp ${host:2}
+				;;
+			g|G)
+				echo add ss_spec_src_fw ${host:2}
+				;;
+		esac
 	done
-	if [ -z "$empty" ]; then
-		iptables -t $1 -I PREROUTING 1 -j SS_SPEC_LAN_DG
-	fi
 }
 
 gen_special_purpose_ip() {
@@ -171,6 +149,35 @@ gen_special_purpose_ip() {
 		$server
 		$SERVER
 EOF
+}
+
+include_ac_rules() {
+	local protocol=$([ "$1" = "mangle" ] && echo udp || echo tcp)
+	iptables-restore -n <<-EOF
+	*$1
+	:SS_SPEC_LAN_DG - [0:0]
+	:SS_SPEC_LAN_AC - [0:0]
+	:SS_SPEC_WAN_AC - [0:0]
+	:SS_SPEC_WAN_FW - [0:0]
+	-A SS_SPEC_LAN_DG -m set --match-set ss_spec_dst_sp dst -j RETURN
+	-A SS_SPEC_LAN_DG -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
+	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_bp src -j RETURN
+	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_fw src -j SS_SPEC_WAN_FW
+	-A SS_SPEC_LAN_AC -m set --match-set ss_spec_src_ac src -j SS_SPEC_WAN_AC
+	-A SS_SPEC_LAN_AC -j ${LAN_TARGET:=SS_SPEC_WAN_AC}
+	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_fw dst -j SS_SPEC_WAN_FW
+	-A SS_SPEC_WAN_AC -m set --match-set ss_spec_dst_bp dst -j RETURN
+	-A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
+	$(gen_prerouting_rules $protocol)
+	COMMIT
+EOF
+}
+
+gen_prerouting_rules() {
+	[ -z "$IFNAMES" ] && echo -I PREROUTING 1 -p $1 -j SS_SPEC_LAN_DG
+	for ifname in $IFNAMES; do
+		echo -I PREROUTING 1 -i $ifname -p $1 -j SS_SPEC_LAN_DG
+	done
 }
 
 while getopts ":s:l:S:L:i:b:w:I:d:a:e:ouUfh" arg; do
