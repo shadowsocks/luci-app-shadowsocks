@@ -109,8 +109,8 @@ msgstr "代理类型"
 msgid "UDP-Relay Server"
 msgstr "UDP服务器"
 
-msgid "Unusable - Missing iptables-mod-tproxy"
-msgstr "不可用 - iptables-mod-tproxy 缺失"
+msgid "Unusable - Missing iptables-mod-tproxy or ip"
+msgstr "不可用 - iptables-mod-tproxy 或 ip 缺失"
 
 msgid "Zone LAN"
 msgstr "内网区域"

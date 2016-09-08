@@ -3,7 +3,6 @@
 
 local m, s, o
 local shadowsocks = "shadowsocks"
-local ipkg = require("luci.model.ipkg")
 local uci = luci.model.uci.cursor()
 local server_table = {}
 
@@ -13,6 +12,10 @@ end
 
 local function has_ss_bin()
 	return has_bin("ss-redir"), has_bin("ss-local"), has_bin("ss-tunnel")
+end
+
+local function has_udp_relay()
+	return luci.sys.call("lsmod | grep -q TPROXY && command -v ip >/dev/null") == 0
 end
 
 local has_redir, has_local, has_tunnel = has_ss_bin()
@@ -71,12 +74,12 @@ if has_redir then
 	o.rmempty = false
 
 	o = s:option(ListValue, "udp_relay_server", translate("UDP-Relay Server"))
-	if ipkg.installed("iptables-mod-tproxy") then
+	if has_udp_relay() then
 		o:value("nil", translate("Disable"))
 		o:value("same", translate("Same as Main Server"))
 		for k, v in pairs(server_table) do o:value(k, v) end
 	else
-		o:value("nil", translate("Unusable - Missing iptables-mod-tproxy"))
+		o:value("nil", translate("Unusable - Missing iptables-mod-tproxy or ip"))
 	end
 	o.default = "nil"
 	o.rmempty = false
