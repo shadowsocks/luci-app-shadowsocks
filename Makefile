@@ -73,7 +73,7 @@ define Package/luci-app-shadowsocks/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/root/etc/uci-defaults/* $(1)/etc/uci-defaults/
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./files/root/usr/bin/* $(1)/usr/bin/
+	$(INSTALL_BIN) ./files/root/usr/bin/ss-rules $(1)/usr/bin/ss-rules
 endef
 
 $(eval $(call BuildPackage,luci-app-shadowsocks))
