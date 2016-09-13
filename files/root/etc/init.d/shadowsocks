@@ -74,14 +74,14 @@ EOF
 start_rules() {
 	config_load $NAME
 	/usr/bin/ss-rules \
-		-s "$(echo $(config_foreach get_server_ips servers))" \
+		-s "$(config_foreach get_server_ips servers)" \
 		-l "$(uci_get_by_type transparent_proxy local_port 1234)" \
 		-i "$(uci_get_by_type access_control wan_bp_list)" \
 		-b "$(uci_get_by_type access_control wan_bp_ips)" \
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
 		-I "$(uci_get_by_type access_control lan_ifaces)" \
 		-d "$(uci_get_by_type access_control lan_target)" \
-		-a "$(echo $(config_foreach get_lan_hosts lan_hosts))" \
+		-a "$(config_foreach get_lan_hosts lan_hosts)" \
 		-e "$(uci_get_by_type access_control ipt_ext)" \
 		-o $(get_arg_udp)
 }
