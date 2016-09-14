@@ -45,6 +45,8 @@ OpenWrt LuCI for Shadowsocks-libev
 
 软件包的正常使用需要依赖 `iptables` 和 `ipset`  
 若需要透明代理支持 UDP 协议, 需要额外安装 `iptables-mod-tproxy` 和 (`ip` or `ip-full`)  
+如果无法安装 `ipset` , 可以使用 `opkg --force-depends install luci-app-shadowsocks_x.x.x-1_all.ipk` 强制安装,  
+然后使用 [ss-rules-without-ipset][srwi] 替换 `/usr/bin/ss-rules`, 但是注意此脚本将会很慢.  
 
 当以下文件存在时, 相应的功能可被使用, LuCI 界面也会显示相应的设置.  
 如果文件不存在, 则对应的功能不可用, LuCI 界面的响应设置也会隐藏.  
@@ -107,3 +109,4 @@ make package/luci-app-shadowsocks/compile V=99
  [uus]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Use-UCI-system
  [uci]: https://wiki.openwrt.org/doc/uci
  [lac]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/LuCI-Access-Control
+ [srwi]: https://github.com/shadowsocks/luci-app-shadowsocks/blob/master/files/root/usr/bin/ss-rules-without-ipset
