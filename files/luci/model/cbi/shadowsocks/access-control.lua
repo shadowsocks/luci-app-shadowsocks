@@ -32,6 +32,10 @@ o.rmempty = true
 s = m:section(TypedSection, "access_control", translate("Zone LAN"))
 s.anonymous = true
 
+o = s:option(Flag, "self_proxy", translate("Self Proxy"))
+o.default = "1"
+o.rmempty = false
+
 o = s:option(MultiValue, "lan_ifaces", translate("Interface"))
 for _, net in ipairs(nwm:get_networks()) do
 	if net:name() ~= "loopback" and string.find(net:name(), "wan") ~= 1 then
@@ -69,7 +73,7 @@ o:value("n", translatef("Normal"))
 o.rmempty  = false
 
 o = s:option(Flag, "enable", translate("Enable"))
-o.default = 1
+o.default = "1"
 o.rmempty = false
 
 return m

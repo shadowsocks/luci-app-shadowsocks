@@ -23,3 +23,4 @@ config servers
 	option encrypt_method 'rc4-md5'
 
 config access_control
+	option self_proxy '1'

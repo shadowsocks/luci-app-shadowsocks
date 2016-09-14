@@ -39,6 +39,12 @@ get_arg_udp() {
 	[ "$server" = "same" ] || valid_server $server && echo "-u"
 }
 
+get_arg_out() {
+	case "$(uci_get_by_type access_control self_proxy 1)" in
+		1|on|true|yes|enabled) echo "-o";;
+	esac
+}
+
 get_arg_ota() {
 	uci_bool_by_name $1 auth && echo "-A"
 }
@@ -83,7 +89,7 @@ start_rules() {
 		-d "$(uci_get_by_type access_control lan_target)" \
 		-a "$(config_foreach get_lan_hosts lan_hosts)" \
 		-e "$(uci_get_by_type access_control ipt_ext)" \
-		-o $(get_arg_udp)
+		$(get_arg_out) $(get_arg_udp)
 }
 
 rules() {
