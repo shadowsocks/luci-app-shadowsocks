@@ -41,7 +41,8 @@ get_arg_udp() {
 
 get_arg_out() {
 	case "$(uci_get_by_type access_control self_proxy 1)" in
-		1|on|true|yes|enabled) echo "-o";;
+		1) echo "-o";;
+		2) echo "-O";;
 	esac
 }
 

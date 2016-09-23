@@ -32,8 +32,10 @@ o.rmempty = true
 s = m:section(TypedSection, "access_control", translate("Zone LAN"))
 s.anonymous = true
 
-o = s:option(Flag, "self_proxy", translate("Self Proxy"))
-o.default = "1"
+o = s:option(ListValue, "self_proxy", translate("Self Proxy"))
+o:value("1", translatef("Normal"))
+o:value("0", translatef("Direct"))
+o:value("2", translatef("Global"))
 o.rmempty = false
 
 o = s:option(MultiValue, "lan_ifaces", translate("Interface"))
