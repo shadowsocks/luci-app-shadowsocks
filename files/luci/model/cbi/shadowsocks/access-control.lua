@@ -60,8 +60,8 @@ s.addremove = true
 s.anonymous = true
 
 o = s:option(Value, "host", translate("Host"))
-luci.sys.net.ipv4_hints(function(ip, name)
-	o:value(ip, "%s (%s)" %{ip, name})
+luci.sys.net.arptable(function(x)
+	o:value(x["IP address"], "%s (%s)" %{x["IP address"], x["HW address"]})
 end)
 o.datatype = "ip4addr"
 o.rmempty  = false
