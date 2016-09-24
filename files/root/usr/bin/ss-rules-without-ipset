@@ -27,6 +27,7 @@ usage() {
 		                            define proxy type
 		    -e <extra_options>      extra options for iptables
 		    -o                      apply the rules to the OUTPUT chain
+		    -O                      apply the global rules to the OUTPUT chain
 		    -u                      enable udprelay mode, TPROXY is required
 		    -U                      enable udprelay mode, using different IP
 		                            and ports for TCP and UDP
@@ -57,12 +58,12 @@ ipt_nat() {
 	ipt="iptables -t nat"
 	$ipt -A SS_SPEC_WAN_FW -p tcp \
 		-j REDIRECT --to-ports $local_port || return 1
-	if [ "$OUTPUT" = 1 ]; then
+	if [ -n "$OUTPUT" ]; then
 		iptables-restore -n <<-EOF
 		*nat
 		:SS_SPEC_WAN_DG - [0:0]
 		$(gen_special_purpose_ip | sed -e "s/\(.*\)/-A SS_SPEC_WAN_DG -d \1 -j RETURN/")
-		-A SS_SPEC_WAN_DG -p tcp $EXT_ARGS -j SS_SPEC_WAN_AC
+		-A SS_SPEC_WAN_DG -p tcp $EXT_ARGS -j $OUTPUT
 		-I OUTPUT 1 -p tcp -j SS_SPEC_WAN_DG
 		COMMIT
 EOF
@@ -165,7 +166,7 @@ gen_prerouting_rules() {
 	done
 }
 
-while getopts ":s:l:S:L:i:b:w:I:d:a:e:ouUfh" arg; do
+while getopts ":s:l:S:L:i:b:w:I:d:a:e:oOuUfh" arg; do
 	case "$arg" in
 		s)
 			server=$(for ip in $OPTARG; do echo $ip; done)
@@ -201,7 +202,10 @@ while getopts ":s:l:S:L:i:b:w:I:d:a:e:ouUfh" arg; do
 			EXT_ARGS=$OPTARG
 			;;
 		o)
-			OUTPUT=1
+			OUTPUT=SS_SPEC_WAN_AC
+			;;
+		O)
+			OUTPUT=SS_SPEC_WAN_FW
 			;;
 		u)
 			TPROXY=1
