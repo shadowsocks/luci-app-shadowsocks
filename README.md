@@ -8,7 +8,7 @@ OpenWrt LuCI for Shadowsocks-libev
 简介
 ---
 
-本软件包是 [Shadowsocks-libev for OpenWrt][openwrt-shadowsocks] 的 LuCI 控制界面,
+本软件包是 [shadowsocks-libev][openwrt-shadowsocks] 的 LuCI 控制界面,
 方便用户控制和使用「透明代理」「SOCKS5 代理」「端口转发」功能.  
 
 软件包文件结构:
@@ -42,24 +42,16 @@ OpenWrt LuCI for Shadowsocks-libev
 依赖
 ---
 
-软件包的正常使用需要依赖 `iptables` 和 `ipset`  
-若需要透明代理支持 UDP 协议, 需要额外安装 `iptables-mod-tproxy` 和 (`ip` 或 `ip-full`)  
-
+软件包的正常使用需要依赖 `iptables` 和 `ipset`.  
 软件包不显式依赖 `shadowsocks-libev`, 会根据用户添加的可执行文件启用相应的功能.  
 可执行文件可通过安装 [openwrt-shadowsocks][openwrt-shadowsocks] 中提供的 `shadowsocks-libev` 获得.  
-当以下文件存在时, 相应的功能可被使用, LuCI 界面也会显示相应的设置, 否则对应的功能不可用, 设置也会被隐藏.  
-以下三个可执行文件都是可选的, 但是需要至少提供一个.
+只有当文件存在时, 相应的功能才可被使用, 并显示相应的 LuCI 设置界面.  
 
- - `ss-redir`  
-    透明代理功能, 支持 TCP 协议, 安装 `iptables-mod-tproxy` 和 `ip` 后可启用
-    UDP 协议(UDP 协议需要服务器支持).  
-    透明代理启动后会使用 [ss-rules][ss-rules] 生成代理转发规则并支持访问控制设置.
-
- - `ss-local`  
-    SOCKS5 代理功能, 支持 TCP 和 UDP 协议(UDP 协议需要服务器支持).
-
- - `ss-tunnel`  
-    端口转发功能, 支持 TCP 和 UDP 协议(UDP 协议需要服务器支持).
+ 可执行文件  | 可选 | 功能        | TCP协议 | UDP协议 
+ ------------|------|-------------|---------|-----------------------------------
+ `ss-redir`  | 是   | 透明代理    | 支持    | 需安装 `iptables-mod-tproxy`, `ip`
+ `ss-local`  | 是   | SOCKS5 代理 | 支持    | 支持
+ `ss-tunnel` | 是   | 端口转发    | 支持    | 支持
 
 注: 可执行文件在 `$PATH` 环境变量所表示的搜索路径中, 都可被正确调用.
 
