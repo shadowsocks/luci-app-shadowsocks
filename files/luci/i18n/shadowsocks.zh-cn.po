@@ -5,16 +5,16 @@ msgid "Access Control"
 msgstr "访问控制"
 
 msgid "Alias(optional)"
-msgstr "别名(可选)"
+msgstr "别名 (可选)"
 
 msgid "Bypassed IP List"
-msgstr "被忽略IP列表"
+msgstr "被忽略 IP 列表"
 
 msgid "Bypassed IP"
-msgstr "额外被忽略IP"
+msgstr "额外被忽略 IP"
 
 msgid "ChinaDNS CHNRoute"
-msgstr "ChinaDNS路由表"
+msgstr "ChinaDNS 路由表"
 
 msgid "Connection Timeout"
 msgstr "连接超时"
@@ -35,7 +35,7 @@ msgid "Encrypt Method"
 msgstr "加密方式"
 
 msgid "Forwarded IP"
-msgstr "强制走代理IP"
+msgstr "强制走代理 IP"
 
 msgid "Global"
 msgstr "全局代理"
@@ -62,7 +62,7 @@ msgid "NULL - As Global Proxy"
 msgstr "留空 - 作为全局代理"
 
 msgid "Onetime Authentication"
-msgstr "一次验证"
+msgstr "一次性认证"
 
 msgid "Password"
 msgstr "密码"
@@ -95,13 +95,13 @@ msgid "Server Port"
 msgstr "服务器端口"
 
 msgid "ShadowSocks"
-msgstr "影梭"
+msgstr "Shadowsocks"
 
 msgid "SOCKS5 Proxy"
-msgstr "SOCKS5代理"
+msgstr "SOCKS5 代理"
 
 msgid "TCP Fast Open"
-msgstr "TCP快速打开"
+msgstr "TCP 快速打开"
 
 msgid "Transparent Proxy"
 msgstr "透明代理"
@@ -110,7 +110,7 @@ msgid "Proxy Type"
 msgstr "代理类型"
 
 msgid "UDP-Relay Server"
-msgstr "UDP服务器"
+msgstr "UDP 服务器"
 
 msgid "Unusable - Missing iptables-mod-tproxy or ip"
 msgstr "不可用 - iptables-mod-tproxy 或 ip 缺失"
