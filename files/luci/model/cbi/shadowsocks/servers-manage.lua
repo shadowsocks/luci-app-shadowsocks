@@ -49,7 +49,7 @@ if support_fast_open() and has_bin("ss-local") then
 end
 
 o = s:option(Value, "server", translate("Server Address"))
-o.datatype = "ipaddr"
+o.datatype = "host"
 o.rmempty = false
 
 o = s:option(Value, "server_port", translate("Server Port"))
