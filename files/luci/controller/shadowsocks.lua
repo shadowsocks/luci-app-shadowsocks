@@ -20,6 +20,9 @@ function index()
 		cbi("shadowsocks/servers-manage"),
 		_("Servers Manage"), 20).leaf = true
 
+	entry({"admin", "services", "shadowsocks", "edit-server"},
+		cbi("shadowsocks/edit-server")).leaf = true
+
 	if luci.sys.call("command -v ss-redir >/dev/null") ~= 0 then
 		return
 	end

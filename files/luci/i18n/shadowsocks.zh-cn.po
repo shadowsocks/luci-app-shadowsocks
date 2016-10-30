@@ -4,6 +4,9 @@ msgstr "Content-Type: text/plain; charset=UTF-8\n"
 msgid "Access Control"
 msgstr "访问控制"
 
+msgid "Alias"
+msgstr "别名"
+
 msgid "Alias(optional)"
 msgstr "别名(可选)"
 
@@ -28,6 +31,9 @@ msgstr "直接连接"
 msgid "Disable"
 msgstr "停用"
 
+msgid "Edit Server"
+msgstr "编辑服务器"
+
 msgid "Enable"
 msgstr "启用"
 
@@ -51,6 +57,9 @@ msgstr "本地端口"
 
 msgid "Main Server"
 msgstr "主服务器"
+
+msgid "None"
+msgstr "无"
 
 msgid "Normal"
 msgstr "正常代理"

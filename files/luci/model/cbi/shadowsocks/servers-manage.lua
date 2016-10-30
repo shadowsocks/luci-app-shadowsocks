@@ -3,70 +3,42 @@
 
 local m, s, o
 local shadowsocks = "shadowsocks"
-local encrypt_methods = {
-	"table",
-	"rc4",
-	"rc4-md5",
-	"aes-128-cfb",
-	"aes-192-cfb",
-	"aes-256-cfb",
-	"aes-128-ctr",
-	"aes-192-ctr",
-	"aes-256-ctr",
-	"bf-cfb",
-	"camellia-128-cfb",
-	"camellia-192-cfb",
-	"camellia-256-cfb",
-	"salsa20",
-	"chacha20",
-	"chacha20-ietf",
-}
-
-local function has_bin(name)
-	return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
-end
-
-local function support_fast_open()
-	return luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim() == "3"
-end
 
 m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Servers Manage")})
 
 -- [[ Servers Manage ]]--
 s = m:section(TypedSection, "servers")
 s.anonymous = true
-s.addremove   = true
-
-o = s:option(Value, "alias", translate("Alias(optional)"))
-o.rmempty = true
-
-o = s:option(Flag, "auth", translate("Onetime Authentication"))
-o.rmempty = false
-
-if support_fast_open() and has_bin("ss-local") then
-	o = s:option(Flag, "fast_open", translate("TCP Fast Open"))
-	o.rmempty = false
+s.addremove = true
+s.template = "cbi/tblsection"
+s.extedit = luci.dispatcher.build_url("admin/services/shadowsocks/edit-server/%s")
+function s.create(...)
+    local sid = TypedSection.create(...)
+    if sid then
+        luci.http.redirect(s.extedit % sid)
+        return
+    end
 end
 
-o = s:option(Value, "server", translate("Server Address"))
-o.datatype = "ipaddr"
-o.rmempty = false
+o = s:option(DummyValue, "alias", translate("Alias"))
+function o.cfgvalue(...)
+    return Value.cfgvalue(...) or translate("None")
+end
 
-o = s:option(Value, "server_port", translate("Server Port"))
-o.datatype = "port"
-o.rmempty = false
+o = s:option(DummyValue, "server", translate("Server Address"))
+function o.cfgvalue(...)
+    return Value.cfgvalue(...) or "?"
+end
 
-o = s:option(Value, "timeout", translate("Connection Timeout"))
-o.datatype = "uinteger"
-o.default = 60
-o.rmempty = false
+o = s:option(DummyValue, "server_port", translate("Server Port"))
+function o.cfgvalue(...)
+    return Value.cfgvalue(...) or "?"
+end
 
-o = s:option(Value, "password", translate("Password"))
-o.password = true
-o.rmempty = false
-
-o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
-for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
-o.rmempty = false
+o = s:option(DummyValue, "encrypt_method", translate("Encrypt Method"))
+function o.cfgvalue(...)
+    local v = Value.cfgvalue(...)
+    return v and v:upper() or "?"
+end
 
 return m
