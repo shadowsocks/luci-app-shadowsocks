@@ -4,7 +4,7 @@
 local m, s, o
 local shadowsocks = "shadowsocks"
 local uci = luci.model.uci.cursor()
-local server_table = {}
+local servers = {}
 
 local function has_bin(name)
 	return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
@@ -34,11 +34,7 @@ local function get_status(name)
 end
 
 uci:foreach(shadowsocks, "servers", function(s)
-	if s.alias then
-		server_table[s[".name"]] = s.alias
-	elseif s.server and s.server_port then
-		server_table[s[".name"]] = "%s:%s" %{s.server, s.server_port}
-	end
+	servers[#servers+1] = {name = s[".name"], alias = s.alias or "%s:%s" %{s.server, s.server_port}}
 end)
 
 m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("General Settings")})
@@ -69,7 +65,7 @@ if has_redir then
 
 	o = s:option(ListValue, "main_server", translate("Main Server"))
 	o:value("nil", translate("Disable"))
-	for k, v in pairs(server_table) do o:value(k, v) end
+	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
 	o.rmempty = false
 
@@ -77,7 +73,7 @@ if has_redir then
 	if has_udp_relay() then
 		o:value("nil", translate("Disable"))
 		o:value("same", translate("Same as Main Server"))
-		for k, v in pairs(server_table) do o:value(k, v) end
+		for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	else
 		o:value("nil", translate("Unusable - Missing iptables-mod-tproxy or ip"))
 	end
@@ -97,7 +93,7 @@ if has_local then
 
 	o = s:option(ListValue, "server", translate("Server"))
 	o:value("nil", translate("Disable"))
-	for k, v in pairs(server_table) do o:value(k, v) end
+	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
 	o.rmempty = false
 
@@ -114,7 +110,7 @@ if has_tunnel then
 
 	o = s:option(ListValue, "server", translate("Server"))
 	o:value("nil", translate("Disable"))
-	for k, v in pairs(server_table) do o:value(k, v) end
+	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
 	o.rmempty = false
 
