@@ -57,7 +57,7 @@ o.rmempty = false
 
 -- [[ LAN Hosts ]]--
 s = m:section(TypedSection, "lan_hosts", translate("LAN Hosts"))
-s.template  = "cbi/tblsection"
+s.template = "cbi/tblsection"
 s.addremove = true
 s.anonymous = true
 
@@ -66,13 +66,13 @@ luci.sys.net.arptable(function(x)
 	o:value(x["IP address"], "%s (%s)" %{x["IP address"], x["HW address"]})
 end)
 o.datatype = "ip4addr"
-o.rmempty  = false
+o.rmempty = false
 
 o = s:option(ListValue, "type", translate("Proxy Type"))
 o:value("b", translatef("Direct"))
 o:value("g", translatef("Global"))
 o:value("n", translatef("Normal"))
-o.rmempty  = false
+o.rmempty = false
 
 o = s:option(Flag, "enable", translate("Enable"))
 o.default = "1"
