@@ -38,8 +38,17 @@ end
 
 o = s:option(DummyValue, "encrypt_method", translate("Encrypt Method"))
 function o.cfgvalue(...)
-	local v = Value.cfgvalue(...)
-	return v and v:upper() or "?"
+	return Value.cfgvalue(...) or "?"
+end
+
+o = s:option(DummyValue, "protocol", translate("Protocol"))
+function o.cfgvalue(...)
+	return Value.cfgvalue(...) or "?"
+end
+
+o = s:option(DummyValue, "obfs", translate("OBFS"))
+function o.cfgvalue(...)
+	return Value.cfgvalue(...) or "?"
 end
 
 return m
