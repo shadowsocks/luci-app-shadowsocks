@@ -31,9 +31,6 @@ msgstr "直接连接"
 msgid "Disable"
 msgstr "停用"
 
-msgid "Edit Server"
-msgstr "编辑服务器"
-
 msgid "Enable"
 msgstr "启用"
 
@@ -70,6 +67,12 @@ msgstr "未运行"
 msgid "NULL - As Global Proxy"
 msgstr "留空 - 作为全局代理"
 
+msgid "OBFS"
+msgstr "混淆"
+
+msgid "OBFS Param"
+msgstr "混淆参数"
+
 msgid "Onetime Authentication"
 msgstr "一次验证"
 
@@ -78,6 +81,12 @@ msgstr "密码"
 
 msgid "Port Forward"
 msgstr "端口转发"
+
+msgid "Protocol"
+msgstr "协议"
+
+msgid "Protocol Param"
+msgstr "协议参数"
 
 msgid "RUNNING"
 msgstr "运行中"
@@ -97,14 +106,17 @@ msgstr "服务器"
 msgid "Server Address"
 msgstr "服务器地址"
 
-msgid "Servers Manage"
-msgstr "服务器管理"
-
 msgid "Server Port"
 msgstr "服务器端口"
 
-msgid "ShadowSocks"
-msgstr "影梭"
+msgid "Servers Details"
+msgstr "服务器详情"
+
+msgid "Servers Manage"
+msgstr "服务器"
+
+msgid "ShadowsocksR"
+msgstr "ShadowsocksR"
 
 msgid "SOCKS5 Proxy"
 msgstr "SOCKS5代理"
