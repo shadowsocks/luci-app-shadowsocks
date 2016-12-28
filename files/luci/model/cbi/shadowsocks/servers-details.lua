@@ -55,6 +55,14 @@ if support_fast_open() and has_bin("ss-local") then
 	o.rmempty = false
 end
 
+o = s:option(Flag, "obfs", translate("Header Obfuscating"))
+o.rmempty = false
+
+o = s:option(Value, "obfs_host", translate("Obfuscating Hostname"))
+o.datatype = "host"
+o.placeholder = "cloudfront.net"
+o:depends("obfs", 1)
+
 o = s:option(Value, "server", translate("Server Address"))
 o.datatype = "ipaddr"
 o.rmempty = false
