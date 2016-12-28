@@ -76,12 +76,6 @@ msgstr "留空 - 作为全局代理"
 msgid "Obfuscating Hostname"
 msgstr "头部混淆主机名"
 
-msgid "Off"
-msgstr "关"
-
-msgid "On"
-msgstr "开"
-
 msgid "Onetime Authentication"
 msgstr "一次验证"
 

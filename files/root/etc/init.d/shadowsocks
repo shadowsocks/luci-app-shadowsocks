@@ -57,11 +57,11 @@ get_arg_tfo() {
 }
 
 get_arg_obfs() {
-	uci_bool_by_name $1 obfs && echo "--obfs"
+	[ -n "$(uci_get_by_name $1 obfs)" ] && echo "--obfs $(uci_get_by_name $1 obfs)"
 }
 
 get_arg_obfs_host() {
-	uci_bool_by_name $1 obfs && \
+	[ -n "$(uci_get_by_name $1 obfs)" ] && \
 		echo "--obfs-host $(uci_get_by_name $1 obfs_host cloudfront.net)"
 }
 
