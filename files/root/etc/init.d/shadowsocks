@@ -57,7 +57,8 @@ get_arg_tfo() {
 }
 
 get_arg_obfs() {
-	[ -n "$(uci_get_by_name $1 obfs)" ] && echo "--obfs $(uci_get_by_name $1 obfs)"
+	local obfs=$(uci_get_by_name $1 obfs)
+	[ -n "$obfs" ] && echo "--obfs $obfs"
 }
 
 get_arg_obfs_host() {
@@ -169,6 +170,20 @@ start() {
 	ss_local
 	ss_tunnel
 	rm -f $CONFIG_FILE
+}
+
+delay_start() {
+	(sleep $1 && start >/dev/null 2>&1) &
+}
+
+boot() {
+	local delay=$(uci_get_by_type general start_delay 0)
+	if [ "$delay" -gt 0 ]; then
+		delay_start $delay
+	else
+		start
+	fi
+	return 0
 }
 
 kill_all() {

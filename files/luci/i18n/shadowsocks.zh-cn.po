@@ -13,6 +13,9 @@ msgstr "别名(可选)"
 msgid "Bypassed IP List"
 msgstr "被忽略IP列表"
 
+msgid "Boot Settings"
+msgstr "启动设置"
+
 msgid "Bypassed IP"
 msgstr "额外被忽略IP"
 
@@ -97,6 +100,9 @@ msgstr "与主服务器相同"
 msgid "Self Proxy"
 msgstr "代理自身"
 
+msgid " seconds"
+msgstr " 秒"
+
 msgid "Server"
 msgstr "服务器"
 
@@ -115,6 +121,9 @@ msgstr "影梭"
 msgid "SOCKS5 Proxy"
 msgstr "SOCKS5代理"
 
+msgid "Start Delay"
+msgstr "启动延时"
+
 msgid "TCP Fast Open"
 msgstr "TCP快速打开"
 
@@ -129,6 +138,9 @@ msgstr "UDP服务器"
 
 msgid "Unusable - Missing iptables-mod-tproxy or ip"
 msgstr "不可用 - iptables-mod-tproxy 或 ip 缺失"
+
+msgid "Unused"
+msgstr "不使用"
 
 msgid "Zone LAN"
 msgstr "内网区域"
