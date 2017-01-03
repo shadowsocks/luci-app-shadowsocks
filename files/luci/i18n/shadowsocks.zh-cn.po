@@ -100,8 +100,8 @@ msgstr "与主服务器相同"
 msgid "Self Proxy"
 msgstr "代理自身"
 
-msgid " seconds"
-msgstr " 秒"
+msgid "seconds"
+msgstr "秒"
 
 msgid "Server"
 msgstr "服务器"

@@ -66,7 +66,7 @@ s.anonymous = true
 o = s:option(Value, "start_delay", translate("Start Delay"))
 o:value(0, translate("Unused"))
 for _, v in ipairs({5, 10, 15, 25, 40}) do
-	o:value(v, v .. translate(" seconds"))
+	o:value(v, v .. translate("seconds"))
 end
 o.datatype = "uinteger"
 o.default = 0
