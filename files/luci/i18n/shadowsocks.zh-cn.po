@@ -4,6 +4,9 @@ msgstr "Content-Type: text/plain; charset=UTF-8\n"
 msgid "Access Control"
 msgstr "访问控制"
 
+msgid "Additional Parameters"
+msgstr "附加参数"
+
 msgid "Alias"
 msgstr "别名"
 
@@ -87,6 +90,9 @@ msgstr "密码"
 
 msgid "Port Forward"
 msgstr "端口转发"
+
+msgid "Proxy port numbers %s only"
+msgstr "仅代理 %s 端口"
 
 msgid "RUNNING"
 msgstr "运行中"
