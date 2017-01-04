@@ -1,6 +1,9 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8\n"
 
+msgid "%u seconds"
+msgstr "%u 秒"
+
 msgid "Access Control"
 msgstr "访问控制"
 
@@ -73,6 +76,9 @@ msgstr "无"
 msgid "Normal"
 msgstr "正常代理"
 
+msgid "Not enabled"
+msgstr "未启用"
+
 msgid "NOT RUNNING"
 msgstr "未运行"
 
@@ -105,9 +111,6 @@ msgstr "与主服务器相同"
 
 msgid "Self Proxy"
 msgstr "代理自身"
-
-msgid "seconds"
-msgstr "秒"
 
 msgid "Server"
 msgstr "服务器"
@@ -144,9 +147,6 @@ msgstr "UDP服务器"
 
 msgid "Unusable - Missing iptables-mod-tproxy or ip"
 msgstr "不可用 - iptables-mod-tproxy 或 ip 缺失"
-
-msgid "Unused"
-msgstr "不使用"
 
 msgid "Zone LAN"
 msgstr "内网区域"

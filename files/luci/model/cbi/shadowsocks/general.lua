@@ -64,9 +64,9 @@ s = m:section(TypedSection, "general", translate("Boot Settings"))
 s.anonymous = true
 
 o = s:option(Value, "start_delay", translate("Start Delay"))
-o:value(0, translate("Unused"))
+o:value(0, translate("Not enabled"))
 for _, v in ipairs({5, 10, 15, 25, 40}) do
-	o:value(v, v .. translate("seconds"))
+	o:value(v, translate("%u seconds") %{v})
 end
 o.datatype = "uinteger"
 o.default = 0

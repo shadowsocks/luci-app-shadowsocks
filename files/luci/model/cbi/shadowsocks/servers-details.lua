@@ -77,7 +77,7 @@ for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
 o.rmempty = false
 
 o = s:option(ListValue, "obfs", translate("Header Obfuscating"))
-o:value("", translatef("Disable"))
+o:value("", translatef("Not enabled"))
 o:value("http", "HTTP")
 o:value("tls", "TLS")
 

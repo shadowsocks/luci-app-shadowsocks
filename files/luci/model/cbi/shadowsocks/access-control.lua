@@ -6,6 +6,17 @@ local shadowsocks = "shadowsocks"
 local uci = luci.model.uci.cursor()
 local nwm = require("luci.model.network").init()
 local chnroute = uci:get_first("chinadns", "chinadns", "chnroute")
+local lan_ifaces = {}
+
+for _, net in ipairs(nwm:get_networks()) do
+	if net:name() ~= "loopback" and string.find(net:name(), "wan") ~= 1 then
+		net = nwm:get_network(net:name())
+		local device = net and net:get_interface()
+		if device then
+			lan_ifaces[device:name()] = device:get_i18n()
+		end
+	end
+end
 
 m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Access Control")})
 
@@ -33,14 +44,20 @@ s = m:section(TypedSection, "access_control", translate("Zone LAN"))
 s.anonymous = true
 
 o = s:option(MultiValue, "lan_ifaces", translate("Interface"))
-for _, net in ipairs(nwm:get_networks()) do
-	if net:name() ~= "loopback" and string.find(net:name(), "wan") ~= 1 then
-		net = nwm:get_network(net:name())
-		local device = net and net:get_interface()
-		if device then
-			o:value(device:name(), device:get_i18n())
+function o.cfgvalue(...)
+	local v = MultiValue.cfgvalue(...)
+	if v then
+		return v
+	else
+		local names = {}
+		for name, _ in pairs(lan_ifaces) do
+			names[#names+1] = name
 		end
+		return table.concat(names, " ")
 	end
+end
+for name, i18n in pairs(lan_ifaces) do
+	o:value(name, i18n)
 end
 
 o = s:option(ListValue, "lan_target", translate("Proxy Type"))
