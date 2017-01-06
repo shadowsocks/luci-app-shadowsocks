@@ -28,7 +28,7 @@ o = s:option(Value, "wan_bp_list", translate("Bypassed IP List"))
 o:value("/dev/null", translate("NULL - As Global Proxy"))
 if chnroute then o:value(chnroute, translate("ChinaDNS CHNRoute")) end
 o.datatype = "or(file, '/dev/null')"
-o.default = chnroute or "/dev/null"
+o.default = "/dev/null"
 o.rmempty = false
 
 o = s:option(DynamicList, "wan_bp_ips", translate("Bypassed IP"))
