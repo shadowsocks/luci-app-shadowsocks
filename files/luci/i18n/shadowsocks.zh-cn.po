@@ -7,9 +7,6 @@ msgstr "%u 秒"
 msgid "Access Control"
 msgstr "访问控制"
 
-msgid "Additional Parameters"
-msgstr "附加参数"
-
 msgid "Alias"
 msgstr "别名"
 
@@ -48,6 +45,9 @@ msgstr "启用"
 
 msgid "Encrypt Method"
 msgstr "加密方式"
+
+msgid "Extra arguments"
+msgstr "附加参数"
 
 msgid "Forwarded IP"
 msgstr "强制走代理IP"
@@ -90,6 +90,9 @@ msgstr "头部混淆主机名"
 
 msgid "Onetime Authentication"
 msgstr "一次验证"
+
+msgid "Passes additional arguments to iptables. Use with care!"
+msgstr "传递到iptables的额外参数。小心使用！"
 
 msgid "Password"
 msgstr "密码"

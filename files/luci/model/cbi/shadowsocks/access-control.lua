@@ -72,7 +72,8 @@ o:value("0", translatef("Direct"))
 o:value("2", translatef("Global"))
 o.rmempty = false
 
-o = s:option(Value, "ipt_ext", translate("Additional Parameters"))
+o = s:option(Value, "ipt_ext", translate("Extra arguments"),
+	translate("Passes additional arguments to iptables. Use with care!"))
 o:value("", translate("None"))
 o:value("--dport 20:1023", translate("Proxy port numbers %s only") %{"20~1023"})
 o:value("-m multiport --dports 53,80,443", translate("Proxy port numbers %s only") %{"53,80,443"})
