@@ -65,6 +65,11 @@ get_lan_hosts() {
 		echo "$(uci_get_by_name $1 type),$(uci_get_by_name $1 host)"
 }
 
+get_plugin_config() {
+	local args=$(uci_get_by_name $1 plugin)
+	[ -n "$args" ] && echo "\"plugin\": \"$args\","
+}
+
 gen_config_file() {
 	cat <<-EOF >$CONFIG_FILE
 		{
@@ -73,6 +78,7 @@ gen_config_file() {
 		    "local_address": "0.0.0.0",
 		    "password": "$(uci_get_by_name $1 password)",
 		    "timeout": $(uci_get_by_name $1 timeout 60),
+		    $(get_plugin_config $1)
 		    "method": "$(uci_get_by_name $1 encrypt_method)"
 		}
 EOF

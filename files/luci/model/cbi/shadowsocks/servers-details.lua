@@ -76,4 +76,7 @@ o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
 o.rmempty = false
 
+o = s:option(Value, "plugin", translate("Plugin arguments"))
+o.placeholder = "eg: obfs-local --obfs http --obfs-host www.baidu.com"
+
 return m
