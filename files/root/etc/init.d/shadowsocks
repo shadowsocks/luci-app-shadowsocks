@@ -180,7 +180,7 @@ boot() {
 }
 
 kill_all() {
-	kill -9 $(pidof $@) >/dev/null 2>&1
+	kill $(pidof $@) >/dev/null 2>&1
 }
 
 stop() {
