@@ -76,15 +76,4 @@ o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
 o.rmempty = false
 
-o = s:option(ListValue, "obfs", translate("Header Obfuscating"))
-o:value("", translatef("Not enabled"))
-o:value("http", "HTTP")
-o:value("tls", "TLS")
-
-o = s:option(Value, "obfs_host", translate("Obfuscating Hostname"))
-o.datatype = "host"
-o.placeholder = "cloudfront.net"
-o:depends("obfs", "http")
-o:depends("obfs", "tls")
-
 return m

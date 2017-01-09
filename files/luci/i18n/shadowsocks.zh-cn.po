@@ -55,9 +55,6 @@ msgstr "强制走代理IP"
 msgid "Global"
 msgstr "全局代理"
 
-msgid "Header Obfuscating"
-msgstr "头部混淆"
-
 msgid "Host"
 msgstr "主机"
 
@@ -84,9 +81,6 @@ msgstr "未运行"
 
 msgid "NULL - As Global Proxy"
 msgstr "留空 - 作为全局代理"
-
-msgid "Obfuscating Hostname"
-msgstr "头部混淆主机名"
 
 msgid "Onetime Authentication"
 msgstr "一次验证"

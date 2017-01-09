@@ -42,10 +42,4 @@ function o.cfgvalue(...)
 	return v and v:upper() or "?"
 end
 
-o = s:option(DummyValue, "obfs", translate("Header Obfuscating"))
-function o.cfgvalue(...)
-	local v = Value.cfgvalue(...)
-	return v and v:upper() or translate("Not enabled")
-end
-
 return m
