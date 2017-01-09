@@ -60,10 +60,10 @@ if has_tunnel then
 	o.value = get_status("ss-tunnel")
 end
 
-s = m:section(TypedSection, "general", translate("Boot Settings"))
+s = m:section(TypedSection, "general", translate("Global Settings"))
 s.anonymous = true
 
-o = s:option(Value, "start_delay", translate("Start Delay"))
+o = s:option(Value, "startup_delay", translate("Startup Delay"))
 o:value(0, translate("Not enabled"))
 for _, v in ipairs({5, 10, 15, 25, 40}) do
 	o:value(v, translate("%u seconds") %{v})

@@ -170,7 +170,7 @@ delay_start() {
 }
 
 boot() {
-	local delay=$(uci_get_by_type general start_delay 0)
+	local delay=$(uci_get_by_type general startup_delay 0)
 	if [ "$delay" -gt 0 ]; then
 		delay_start $delay
 	else

@@ -16,9 +16,6 @@ msgstr "别名(可选)"
 msgid "Bypassed IP List"
 msgstr "被忽略IP列表"
 
-msgid "Boot Settings"
-msgstr "启动设置"
-
 msgid "Bypassed IP"
 msgstr "额外被忽略IP"
 
@@ -54,6 +51,9 @@ msgstr "强制走代理IP"
 
 msgid "Global"
 msgstr "全局代理"
+
+msgid "Global Settings"
+msgstr "全局设置"
 
 msgid "Host"
 msgstr "主机"
@@ -130,8 +130,8 @@ msgstr "影梭"
 msgid "SOCKS5 Proxy"
 msgstr "SOCKS5代理"
 
-msgid "Start Delay"
-msgstr "启动延时"
+msgid "Startup Delay"
+msgstr "自启动延时"
 
 msgid "TCP Fast Open"
 msgstr "TCP快速打开"
