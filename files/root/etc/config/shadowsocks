@@ -1,6 +1,6 @@
 
 config general
-	option start_delay '0'
+	option startup_delay '0'
 
 config transparent_proxy
 	option main_server 'nil'
