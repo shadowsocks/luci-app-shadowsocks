@@ -18,14 +18,15 @@ usage() {
 		    -l <local_port>         port number of shadowsocks local server
 		    -S <server_ips>         ip address of shadowsocks remote UDP server
 		    -L <local_port>         port number of shadowsocks local UDP server
-		    -i <ip_list_file>       a file whose content is bypassed ip list
+		    -B <ip_list_file>       a file whose content is bypassed ip list
 		    -b <wan_ips>            wan ip of will be bypassed
+		    -W <ip_list_file>       a file whose content is forwarded ip list
 		    -w <wan_ips>            wan ip of will be forwarded
 		    -I <interface>          proxy only for the given interface
 		    -d <target>             the default target of lan access control
 		    -a <lan_hosts>          lan ip of access control, need a prefix to
 		                            define proxy type
-		    -e <extra_options>      extra options for iptables
+		    -e <extra_args>         extra arguments for iptables
 		    -o                      apply the rules to the OUTPUT chain
 		    -O                      apply the global rules to the OUTPUT chain
 		    -u                      enable udprelay mode, TPROXY is required
@@ -150,8 +151,9 @@ include_ac_rules() {
 	-A SS_SPEC_LAN_DG -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
 	$(gen_lan_host_ipt_entry | sort | sed -e s/^.//)
 	-A SS_SPEC_LAN_AC -j ${LAN_TARGET:=SS_SPEC_WAN_AC}
+	$(sed -e "s/\(.*\)/-A SS_SPEC_WAN_AC -d \1 -j SS_SPEC_WAN_FW/" ${WAN_FW_LIST:=/dev/null} 2>/dev/null)
 	$(for ip in $WAN_FW_IP; do echo "-A SS_SPEC_WAN_AC -d $ip -j SS_SPEC_WAN_FW"; done)
-	$(sed -e "s/\(.*\)/-A SS_SPEC_WAN_AC -d \1 -j RETURN/" ${IGNORED:=/dev/null} 2>/dev/null)
+	$(sed -e "s/\(.*\)/-A SS_SPEC_WAN_AC -d \1 -j RETURN/" ${WAN_BP_LIST:=/dev/null} 2>/dev/null)
 	$(for ip in $WAN_BP_IP; do echo "-A SS_SPEC_WAN_AC -d $ip -j RETURN"; done)
 	-A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
 	$(gen_prerouting_rules $protocol)
@@ -166,7 +168,7 @@ gen_prerouting_rules() {
 	done
 }
 
-while getopts ":s:l:S:L:i:b:w:I:d:a:e:oOuUfh" arg; do
+while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
 	case "$arg" in
 		s)
 			server=$(for ip in $OPTARG; do echo $ip; done)
@@ -180,11 +182,14 @@ while getopts ":s:l:S:L:i:b:w:I:d:a:e:oOuUfh" arg; do
 		L)
 			LOCAL_PORT=$OPTARG
 			;;
-		i)
-			IGNORED=$OPTARG
+		B)
+			WAN_BP_LIST=$OPTARG
 			;;
 		b)
 			WAN_BP_IP=$OPTARG
+			;;
+		W)
+			WAN_FW_LIST=$OPTARG
 			;;
 		w)
 			WAN_FW_IP=$OPTARG

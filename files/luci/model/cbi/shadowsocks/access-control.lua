@@ -35,6 +35,10 @@ o = s:option(DynamicList, "wan_bp_ips", translate("Bypassed IP"))
 o.datatype = "ip4addr"
 o.rmempty = true
 
+o = s:option(Value, "wan_fw_list", translate("Forwarded IP List"))
+o.datatype = "or(file, '/dev/null')"
+o.rmempty = true
+
 o = s:option(DynamicList, "wan_fw_ips", translate("Forwarded IP"))
 o.datatype = "ip4addr"
 o.rmempty = true

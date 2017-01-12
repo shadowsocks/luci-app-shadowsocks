@@ -89,8 +89,9 @@ start_rules() {
 	/usr/bin/ss-rules \
 		-s "$(config_foreach get_server_ips servers)" \
 		-l "$(uci_get_by_type transparent_proxy local_port 1234)" \
-		-i "$(uci_get_by_type access_control wan_bp_list)" \
+		-B "$(uci_get_by_type access_control wan_bp_list)" \
 		-b "$(uci_get_by_type access_control wan_bp_ips)" \
+		-W "$(uci_get_by_type access_control wan_fw_list)" \
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
 		-I "$(uci_get_by_type access_control lan_ifaces)" \
 		-d "$(uci_get_by_type access_control lan_target)" \
