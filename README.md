@@ -14,27 +14,28 @@ OpenWrt LuCI for Shadowsocks-libev
 /
 ├── etc/
 │   ├── config/
-│   │   └── shadowsocks                            // UCI 配置文件
+│   │   └── shadowsocks                             // UCI 配置文件
 │   │── init.d/
-│   │   └── shadowsocks                            // init 脚本
+│   │   └── shadowsocks                             // init 脚本
 │   └── uci-defaults/
-│       └── luci-shadowsocks                       // uci-defaults 脚本
+│       └── luci-shadowsocks                        // uci-defaults 脚本
 └── usr/
     ├── bin/
-    │   └── ss-rules                               // 生成代理转发规则的脚本
+    │   └── ss-rules                                // 生成代理转发规则的脚本
     └── lib/
         └── lua/
-            └── luci/                              // LuCI 部分
+            └── luci/                               // LuCI 部分
                 ├── controller/
-                │   └── shadowsocks.lua            // LuCI 菜单配置
-                ├── i18n/                          // LuCI 语言文件目录
+                │   └── shadowsocks.lua             // LuCI 菜单配置
+                ├── i18n/                           // LuCI 语言文件目录
                 │   └── shadowsocks.zh-cn.lmo
                 └── model/
                     └── cbi/
                         └── shadowsocks/
-                            ├── general.lua        // LuCI 基本设置
-                            ├── servers-manage.lua // LuCI 服务器管理
-                            └── access-control.lua // LuCI 访问控制
+                            ├── general.lua         // LuCI 基本设置
+                            ├── servers.lua         // LuCI 服务器列表
+                            ├── servers-details.lua // LuCI 服务器编辑
+                            └── access-control.lua  // LuCI 访问控制
 ```
 
 依赖
