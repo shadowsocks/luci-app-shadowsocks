@@ -85,9 +85,6 @@ msgstr "未运行"
 msgid "NULL - As Global Proxy"
 msgstr "留空 - 作为全局代理"
 
-msgid "Onetime Authentication"
-msgstr "一次验证"
-
 msgid "Passes additional arguments to iptables. Use with care!"
 msgstr "传递到iptables的额外参数。小心使用！"
 

@@ -46,10 +46,6 @@ get_arg_out() {
 	esac
 }
 
-get_arg_ota() {
-	uci_bool_by_name $1 auth && echo "-A"
-}
-
 get_arg_tfo() {
 	if [ "3" = "$(cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null)" ]; then
 		uci_bool_by_name $1 fast_open && echo "--fast-open"
@@ -112,7 +108,7 @@ rules() {
 
 start_redir() {
 	gen_config_file $1
-	ss-redir -c $CONFIG_FILE $2 $(get_arg_ota $1) \
+	ss-redir -c $CONFIG_FILE $2 \
 		-l $(uci_get_by_type transparent_proxy local_port 1234) \
 		-f /var/run/ss-redir$3.pid
 }
@@ -135,7 +131,7 @@ ss_redir() {
 
 start_local() {
 	gen_config_file $1
-	ss-local -c $CONFIG_FILE -u $(get_arg_ota $1) $(get_arg_tfo $1) \
+	ss-local -c $CONFIG_FILE -u $(get_arg_tfo $1) \
 		-l $(uci_get_by_type socks5_proxy local_port 1080) \
 		-f /var/run/ss-local.pid
 }
@@ -148,7 +144,7 @@ ss_local() {
 
 start_tunnel() {
 	gen_config_file $1
-	ss-tunnel -c $CONFIG_FILE -u $(get_arg_ota $1) \
+	ss-tunnel -c $CONFIG_FILE -u \
 		-l $(uci_get_by_type port_forward local_port 5300) \
 		-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
 		-f /var/run/ss-tunnel.pid
