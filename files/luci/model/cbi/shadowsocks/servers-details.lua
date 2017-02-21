@@ -5,7 +5,6 @@ local m, s, o
 local shadowsocks = "shadowsocks"
 local sid = arg[1]
 local encrypt_methods = {
-	"table",
 	"rc4-md5",
 	"aes-128-cfb",
 	"aes-192-cfb",
@@ -16,14 +15,10 @@ local encrypt_methods = {
 	"aes-128-gcm",
 	"aes-192-gcm",
 	"aes-256-gcm",
-	"bf-cfb",
 	"camellia-128-cfb",
 	"camellia-192-cfb",
 	"camellia-256-cfb",
-	"salsa20",
-	"chacha20",
 	"chacha20-ietf",
-	"chacha20-poly1305",
 	"chacha20-ietf-poly1305",
 }
 
