@@ -64,9 +64,12 @@ get_lan_hosts() {
 get_plugin_config() {
 	local plugin=$(uci_get_by_name $1 plugin)
 	local plugin_opts=$(uci_get_by_name $1 plugin_opts)
-	[ -n "$plugin" -a -n "$plugin_opts" ] && echo "
+	if [ -n "$plugin" -a -n "$plugin_opts" ]; then
+		echo $plugin >>/var/run/ss-plugin
+		echo "
     \"plugin\": \"$plugin\",
     \"plugin_opts\": \"$plugin_opts\","
+	fi
 }
 
 gen_config_file() {
@@ -179,10 +182,14 @@ boot() {
 }
 
 kill_all() {
-	kill $(pidof $@) >/dev/null 2>&1
+	kill -9 $(pidof $@) >/dev/null 2>&1
 }
 
 stop() {
 	/usr/bin/ss-rules -f
 	kill_all ss-redir ss-local ss-tunnel
+	if [ -f /var/run/ss-plugin ]; then
+		kill -9 $(pidof $(cat /var/run/ss-plugin | sort | uniq)) >/dev/null 2>&1
+		rm -f /var/run/ss-plugin
+	fi
 }
