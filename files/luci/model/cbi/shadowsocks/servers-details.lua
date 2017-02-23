@@ -18,6 +18,7 @@ local encrypt_methods = {
 	"camellia-128-cfb",
 	"camellia-192-cfb",
 	"camellia-256-cfb",
+	"bf-cfb",
 	"salsa20",
 	"chacha20",
 	"chacha20-ietf",
