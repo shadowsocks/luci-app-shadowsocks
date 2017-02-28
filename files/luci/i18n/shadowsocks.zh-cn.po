@@ -31,6 +31,9 @@ msgstr "目标地址"
 msgid "Direct"
 msgstr "直接连接"
 
+msgid "Directly Key"
+msgstr "直接密钥"
+
 msgid "Disable"
 msgstr "停用"
 

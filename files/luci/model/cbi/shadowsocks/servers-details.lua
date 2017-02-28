@@ -69,7 +69,8 @@ o.rmempty = false
 
 o = s:option(Value, "password", translate("Password"))
 o.password = true
-o.rmempty = false
+
+o = s:option(Value, "key", translate("Directly Key"))
 
 o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
