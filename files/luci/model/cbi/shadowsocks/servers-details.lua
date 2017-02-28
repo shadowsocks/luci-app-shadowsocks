@@ -79,6 +79,6 @@ o = s:option(Value, "plugin", translate("Plugin Name"))
 o.placeholder = "eg: obfs-local"
 
 o = s:option(Value, "plugin_opts", translate("Plugin Arguments"))
-o.placeholder = "eg: obfs=http;obfs-host=www.baidu.com"
+o.placeholder = "eg: obfs=http;obfs-host=www.bing.com"
 
 return m
