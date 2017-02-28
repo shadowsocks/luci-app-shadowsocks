@@ -98,6 +98,11 @@ if has_redir then
 	o.datatype = "port"
 	o.default = 1234
 	o.rmempty = false
+
+	o = s:option(Value, "mtu", translate("Override MTU"))
+	o.default = 1492
+	o.datatype = "range(296,9200)"
+	o.rmempty = false
 end
 
 -- [[ SOCKS5 Proxy ]]--
@@ -114,6 +119,11 @@ if has_local then
 	o = s:option(Value, "local_port", translate("Local Port"))
 	o.datatype = "port"
 	o.default = 1080
+	o.rmempty = false
+
+	o = s:option(Value, "mtu", translate("Override MTU"))
+	o.default = 1492
+	o.datatype = "range(296,9200)"
 	o.rmempty = false
 end
 
@@ -135,6 +145,11 @@ if has_tunnel then
 
 	o = s:option(Value, "destination", translate("Destination"))
 	o.default = "8.8.4.4:53"
+	o.rmempty = false
+
+	o = s:option(Value, "mtu", translate("Override MTU"))
+	o.default = 1492
+	o.datatype = "range(296,9200)"
 	o.rmempty = false
 end
 
