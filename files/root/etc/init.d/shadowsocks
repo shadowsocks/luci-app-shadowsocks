@@ -123,10 +123,16 @@ rules() {
 
 start_redir() {
 	gen_config_file $1
-	ss-redir -c $CONFIG_FILE $2 \
-		-l $(uci_get_by_type transparent_proxy local_port 1234) \
-		--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
-		-f /var/run/ss-redir$3.pid
+	local processors=$(grep processor /proc/cpuinfo | wc -l)
+	local processes=$(uci_get_by_type transparent_proxy processes 1)
+	[ $processes -gt $processors ] && processes=$processors
+	[ $processes -gt 1 ] && reuse_port="--reuse-port"
+	for i in $(seq $processes); do
+		ss-redir -c $CONFIG_FILE $2 \
+			-l $(uci_get_by_type transparent_proxy local_port 1234) \
+			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
+			$reuse_port -f /var/run/ss-redir$3-$i.pid
+	done
 }
 
 ss_redir() {
@@ -147,10 +153,16 @@ ss_redir() {
 
 start_local() {
 	gen_config_file $1
-	ss-local -c $CONFIG_FILE -u $(get_arg_tfo $1) \
-		-l $(uci_get_by_type socks5_proxy local_port 1080) \
-		--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
-		-f /var/run/ss-local.pid
+	local processors=$(grep processor /proc/cpuinfo | wc -l)
+	local processes=$(uci_get_by_type socks5_proxy processes 1)
+	[ $processes -gt $processors ] && processes=$processors
+	[ $processes -gt 1 ] && reuse_port="--reuse-port"
+	for i in $(seq $processes); do
+		ss-local -c $CONFIG_FILE -u $(get_arg_tfo $1) \
+			-l $(uci_get_by_type socks5_proxy local_port 1080) \
+			--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
+			$reuse_port -f /var/run/ss-local-$i.pid
+	done
 }
 
 ss_local() {
@@ -161,11 +173,17 @@ ss_local() {
 
 start_tunnel() {
 	gen_config_file $1
-	ss-tunnel -c $CONFIG_FILE -u \
-		-l $(uci_get_by_type port_forward local_port 5300) \
-		-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
-		--mtu $(uci_get_by_type port_forward mtu 1492) \
-		-f /var/run/ss-tunnel.pid
+	local processors=$(grep processor /proc/cpuinfo | wc -l)
+	local processes=$(uci_get_by_type port_forward processes 1)
+	[ $processes -gt $processors ] && processes=$processors
+	[ $processes -gt 1 ] && reuse_port="--reuse-port"
+	for i in $(seq $processes); do
+		ss-tunnel -c $CONFIG_FILE -u \
+			-l $(uci_get_by_type port_forward local_port 5300) \
+			-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
+			--mtu $(uci_get_by_type port_forward mtu 1492) \
+			$reuse_port -f /var/run/ss-tunnel-$i.pid
+	done
 }
 
 ss_tunnel() {
