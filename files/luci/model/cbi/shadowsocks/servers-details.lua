@@ -25,10 +25,6 @@ local encrypt_methods = {
 	"chacha20-ietf-poly1305",
 }
 
-local function has_bin(name)
-	return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
-end
-
 local function support_fast_open()
 	return luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim() == "3"
 end
@@ -49,7 +45,7 @@ s.addremove = false
 o = s:option(Value, "alias", translate("Alias(optional)"))
 o.rmempty = true
 
-if support_fast_open() and has_bin("ss-local") then
+if support_fast_open() then
 	o = s:option(Flag, "fast_open", translate("TCP Fast Open"))
 	o.rmempty = false
 end
