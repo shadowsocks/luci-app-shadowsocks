@@ -128,7 +128,7 @@ start_redir() {
 	[ $processes -gt $processors ] && processes=$processors
 	[ $processes -gt 1 ] && reuse_port="--reuse-port"
 	for i in $(seq $processes); do
-		ss-redir -c $CONFIG_FILE $2 \
+		ss-redir -c $CONFIG_FILE $2 $(get_arg_tfo $1) \
 			-l $(uci_get_by_type transparent_proxy local_port 1234) \
 			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
 			$reuse_port -f /var/run/ss-redir$3-$i.pid
