@@ -11,7 +11,6 @@ STOP=15
 
 NAME=shadowsocks
 EXTRA_COMMANDS=rules
-CONFIG_FILE=/var/etc/$NAME.json
 
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
@@ -30,13 +29,20 @@ uci_bool_by_name() {
 	return 1
 }
 
-valid_server() {
+validate_server() {
 	[ "$(uci get $NAME.$1 2>/dev/null)" = "servers" ]
+}
+
+has_valid_server() {
+	for server in $@; do
+		validate_server $server && return 0
+	done
+	return 1
 }
 
 get_arg_udp() {
 	local server=$(uci_get_by_type transparent_proxy udp_relay_server)
-	[ "$server" = "same" ] || valid_server $server && echo "-u"
+	[ "$server" = "same" ] || validate_server $server && echo "-u"
 }
 
 get_arg_out() {
@@ -85,7 +91,8 @@ get_crypto_config() {
 }
 
 gen_config_file() {
-	cat <<-EOF >$CONFIG_FILE
+	local config_file=/var/etc/$NAME-$1.json
+	cat <<-EOF >$config_file
 		{
 		    "server": "$(uci_get_by_name $1 server)",
 		    "server_port": $(uci_get_by_name $1 server_port),
@@ -95,6 +102,7 @@ gen_config_file() {
 		    "method": "$(uci_get_by_name $1 encrypt_method)"
 		}
 EOF
+	echo $config_file
 }
 
 start_rules() {
@@ -114,82 +122,66 @@ start_rules() {
 }
 
 rules() {
-	if !(pidof ss-redir >/dev/null); then
-		logger -st $NAME -p3 "ss-redir not running."
-		return 1
-	fi
+	pidof ss-redir >/dev/null || return 0
 	start_rules || /usr/bin/ss-rules -f
 }
 
 start_redir() {
-	gen_config_file $1
-	local processors=$(grep processor /proc/cpuinfo | wc -l)
-	local processes=$(uci_get_by_type transparent_proxy processes 1)
-	[ $processes -gt $processors ] && processes=$processors
-	[ $processes -gt 1 ] && reuse_port="--reuse-port"
-	for i in $(seq $processes); do
-		ss-redir -c $CONFIG_FILE $2 $(get_arg_tfo $1) \
-			-l $(uci_get_by_type transparent_proxy local_port 1234) \
-			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
-			$reuse_port -f /var/run/ss-redir$3-$i.pid
-	done
+	validate_server $1 || return 0
+	ss-redir -c $(gen_config_file $1) $2 $(get_arg_tfo $1) \
+		-l $(uci_get_by_type transparent_proxy local_port 1234) \
+		--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
+		--reuse-port -f /var/run/ss-redir$3-$1.pid
 }
 
 ss_redir() {
 	command -v ss-redir >/dev/null 2>&1 || return 1
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
-	valid_server $main_server || return 1
+	has_valid_server $main_server || return 1
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
-	[ "$udp_relay_server" = "same" ] && udp_relay_server=$main_server
-	if [ "$udp_relay_server" = "$main_server" ]; then
-		start_redir $main_server -u
-	elif valid_server $udp_relay_server; then
-		start_redir $main_server
-		start_redir $udp_relay_server -U -udp
+	if [ "$udp_relay_server" = "same" ]; then
+		for server in $main_server; do
+			start_redir $server -u
+		done
 	else
-		start_redir $main_server
+		for server in $main_server; do
+			start_redir $server
+		done
+		for server in $udp_relay_server; do
+			start_redir $server -U -udp
+		done
 	fi
 }
 
 start_local() {
-	gen_config_file $1
-	local processors=$(grep processor /proc/cpuinfo | wc -l)
-	local processes=$(uci_get_by_type socks5_proxy processes 1)
-	[ $processes -gt $processors ] && processes=$processors
-	[ $processes -gt 1 ] && reuse_port="--reuse-port"
-	for i in $(seq $processes); do
-		ss-local -c $CONFIG_FILE -u $(get_arg_tfo $1) \
-			-l $(uci_get_by_type socks5_proxy local_port 1080) \
-			--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
-			$reuse_port -f /var/run/ss-local-$i.pid
-	done
+	validate_server $1 || return 0
+	ss-local -c $(gen_config_file $1) -u $(get_arg_tfo $1) \
+		-l $(uci_get_by_type socks5_proxy local_port 1080) \
+		--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
+		--reuse-port -f /var/run/ss-local-$1.pid
 }
 
 ss_local() {
 	command -v ss-local >/dev/null 2>&1 || return 0
-	local server=$(uci_get_by_type socks5_proxy server)
-	valid_server $server && start_local $server
+	for server in $(uci_get_by_type socks5_proxy server); do
+		start_local $server
+	done
 }
 
 start_tunnel() {
-	gen_config_file $1
-	local processors=$(grep processor /proc/cpuinfo | wc -l)
-	local processes=$(uci_get_by_type port_forward processes 1)
-	[ $processes -gt $processors ] && processes=$processors
-	[ $processes -gt 1 ] && reuse_port="--reuse-port"
-	for i in $(seq $processes); do
-		ss-tunnel -c $CONFIG_FILE -u \
-			-l $(uci_get_by_type port_forward local_port 5300) \
-			-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
-			--mtu $(uci_get_by_type port_forward mtu 1492) \
-			$reuse_port -f /var/run/ss-tunnel-$i.pid
-	done
+	validate_server $1 || return 0
+	ss-tunnel -c $(gen_config_file $1) -u \
+		-l $(uci_get_by_type port_forward local_port 5300) \
+		-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
+		--mtu $(uci_get_by_type port_forward mtu 1492) \
+		--reuse-port -f /var/run/ss-tunnel-$1.pid
 }
 
 ss_tunnel() {
 	command -v ss-tunnel >/dev/null 2>&1 || return 0
-	local server=$(uci_get_by_type port_forward server)
-	valid_server $server && start_tunnel $server
+	for server in $(uci_get_by_type port_forward server); do
+		start_tunnel $server
+	done
 }
 
 start() {
@@ -197,20 +189,11 @@ start() {
 	ss_redir && rules
 	ss_local
 	ss_tunnel
-	rm -f $CONFIG_FILE
-}
-
-delay_start() {
-	(sleep $1 && start >/dev/null 2>&1) &
 }
 
 boot() {
 	local delay=$(uci_get_by_type general startup_delay 0)
-	if [ "$delay" -gt 0 ]; then
-		delay_start $delay
-	else
-		start
-	fi
+	(sleep $delay && start >/dev/null 2>&1) &
 	return 0
 }
 
