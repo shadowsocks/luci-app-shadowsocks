@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-shadowsocks
 PKG_VERSION:=1.6.3
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
@@ -75,6 +75,8 @@ define Package/luci-app-shadowsocks/install
 	$(INSTALL_DATA) ./files/luci/controller/*.lua $(1)/usr/lib/lua/luci/controller/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/shadowsocks
 	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocks/*.lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocks/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/shadowsocks
+	$(INSTALL_DATA) ./files/luci/view/shadowsocks/*.htm $(1)/usr/lib/lua/luci/view/shadowsocks/
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/root/etc/config/shadowsocks $(1)/etc/config/shadowsocks
 	$(INSTALL_DIR) $(1)/etc/init.d

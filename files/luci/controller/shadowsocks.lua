@@ -16,6 +16,9 @@ function index()
 		cbi("shadowsocks/general"),
 		_("General Settings"), 10).leaf = true
 
+	entry({"admin", "services", "shadowsocks", "status"},
+		call("act_status")).leaf = true
+
 	entry({"admin", "services", "shadowsocks", "servers"},
 		arcombine(cbi("shadowsocks/servers"), cbi("shadowsocks/servers-details")),
 		_("Servers Manage"), 20).leaf = true
@@ -27,4 +30,17 @@ function index()
 	entry({"admin", "services", "shadowsocks", "access-control"},
 		cbi("shadowsocks/access-control"),
 		_("Access Control"), 30).leaf = true
+end
+
+local function is_running(name)
+	return luci.sys.call("pidof %s >/dev/null" %{name}) == 0
+end
+
+function act_status()
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+		ss_redir = is_running("ss-redir"),
+		ss_local = is_running("ss-local"),
+		ss_tunnel = is_running("ss-tunnel")
+	})
 end
