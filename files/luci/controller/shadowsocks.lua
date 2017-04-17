@@ -17,7 +17,7 @@ function index()
 		_("General Settings"), 10).leaf = true
 
 	entry({"admin", "services", "shadowsocks", "status"},
-		call("act_status")).leaf = true
+		call("action_status")).leaf = true
 
 	entry({"admin", "services", "shadowsocks", "servers"},
 		arcombine(cbi("shadowsocks/servers"), cbi("shadowsocks/servers-details")),
@@ -36,7 +36,7 @@ local function is_running(name)
 	return luci.sys.call("pidof %s >/dev/null" %{name}) == 0
 end
 
-function act_status()
+function action_status()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
 		ss_redir = is_running("ss-redir"),

@@ -12,11 +12,11 @@
 			_tunnel_status = document.getElementById('_tunnel_status');
 		XHR.poll(5, '<%= luci.dispatcher.build_url("admin", "services", "shadowsocks", "status") %>', null, function(x, status) {
 			if (_redir_status)
-				_redir_status.textContent = status.ss_redir ? '<%= translate("RUNNING") %>' : '<%= translate("NOT RUNNING") %>';
+				_redir_status.textContent = status.ss_redir ? '<%:RUNNING%>' : '<%:NOT RUNNING%>';
 			if (_local_status)
-				_local_status.textContent = status.ss_local ? '<%= translate("RUNNING") %>' : '<%= translate("NOT RUNNING") %>';
+				_local_status.textContent = status.ss_local ? '<%:RUNNING%>' : '<%:NOT RUNNING%>';
 			if (_tunnel_status)
-				_tunnel_status.textContent = status.ss_tunnel ? '<%= translate("RUNNING") %>' : '<%= translate("NOT RUNNING") %>';
+				_tunnel_status.textContent = status.ss_tunnel ? '<%:RUNNING%>' : '<%:NOT RUNNING%>';
 		});
 	}());
 //]]></script>
