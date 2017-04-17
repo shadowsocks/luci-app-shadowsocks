@@ -104,6 +104,7 @@ ipt_mangle() {
 export_ipt_rules() {
 	[ -n "$FWI" ] || return 0
 	cat <<-CAT >>$FWI
+	iptables-save -c | grep -v "SS_SPEC" | iptables-restore -c
 	iptables-restore -n <<-EOF
 	$(iptables-save | grep -E "SS_SPEC|^\*|^COMMIT" |\
 			sed -e "s/^-A \(OUTPUT\|PREROUTING\)/-I \1 1/")
