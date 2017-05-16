@@ -1,9 +1,7 @@
 OpenWrt LuCI for Shadowsocks-libev
 ===
 
-[![Download][download_badge]][download_url]
 [![Latest release][release_badge]][release_url]
-[![Gitter][gitter_badge]][gitter_url]
 
 简介
 ---
@@ -16,27 +14,28 @@ OpenWrt LuCI for Shadowsocks-libev
 /
 ├── etc/
 │   ├── config/
-│   │   └── shadowsocks                            // UCI 配置文件
+│   │   └── shadowsocks                             // UCI 配置文件
 │   │── init.d/
-│   │   └── shadowsocks                            // init 脚本
+│   │   └── shadowsocks                             // init 脚本
 │   └── uci-defaults/
-│       └── luci-shadowsocks                       // uci-defaults 脚本
+│       └── luci-shadowsocks                        // uci-defaults 脚本
 └── usr/
     ├── bin/
-    │   └── ss-rules                               // 生成代理转发规则的脚本
+    │   └── ss-rules                                // 生成代理转发规则的脚本
     └── lib/
         └── lua/
-            └── luci/                              // LuCI 部分
+            └── luci/                               // LuCI 部分
                 ├── controller/
-                │   └── shadowsocks.lua            // LuCI 菜单配置
-                ├── i18n/                          // LuCI 语言文件目录
+                │   └── shadowsocks.lua             // LuCI 菜单配置
+                ├── i18n/                           // LuCI 语言文件目录
                 │   └── shadowsocks.zh-cn.lmo
                 └── model/
                     └── cbi/
                         └── shadowsocks/
-                            ├── general.lua        // LuCI 基本设置
-                            ├── servers-manage.lua // LuCI 服务器管理
-                            └── access-control.lua // LuCI 访问控制
+                            ├── general.lua         // LuCI 基本设置
+                            ├── servers.lua         // LuCI 服务器列表
+                            ├── servers-details.lua // LuCI 服务器编辑
+                            └── access-control.lua  // LuCI 访问控制
 ```
 
 依赖
@@ -82,16 +81,11 @@ make menuconfig
 make package/luci-app-shadowsocks/compile V=99
 ```
 
- [download_badge]: https://api.bintray.com/packages/aa65535/opkg/luci-app-shadowsocks/images/download.svg
- [download_url]: https://bintray.com/aa65535/opkg/luci-app-shadowsocks/_latestVersion
  [release_badge]: https://img.shields.io/github/release/shadowsocks/luci-app-shadowsocks.svg
  [release_url]: https://github.com/shadowsocks/luci-app-shadowsocks/releases/latest
- [gitter_badge]: https://badges.gitter.im/shadowsocks/luci-app-shadowsocks.svg
- [gitter_url]: https://gitter.im/shadowsocks/luci-app-shadowsocks
  [openwrt-shadowsocks]: https://github.com/shadowsocks/openwrt-shadowsocks
  [openwrt-sdk]: https://wiki.openwrt.org/doc/howto/obtain.firmware.sdk
  [ss-rules]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Instruction-of-ss-rules
  [Use-UCI-system]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Use-UCI-system
  [uci]: https://wiki.openwrt.org/doc/uci
  [LuCI-Access-Control]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/LuCI-Access-Control
- [ss-rules-without-ipset]: https://github.com/shadowsocks/luci-app-shadowsocks/blob/master/files/root/usr/bin/ss-rules-without-ipset

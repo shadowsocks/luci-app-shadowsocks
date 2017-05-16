@@ -1,4 +1,7 @@
 
+config general
+	option startup_delay '0'
+
 config transparent_proxy
 	option main_server 'nil'
 	option udp_relay_server 'nil'
