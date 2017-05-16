@@ -25,6 +25,22 @@ local encrypt_methods = {
 	"chacha20-ietf-poly1305",
 	"xchacha20-ietf-poly1305",
 }
+local protocols = {
+	"origin",
+	"verify_deflate",
+	"verify_sha1",
+	"auth_sha1_v2",
+	"auth_sha1_v4",
+	"auth_aes128_md5",
+	"auth_aes128_sha1"
+}
+local obfs_list = {
+	"plain",
+	"http_simple",
+	"http_post",
+	"random_head",
+	"tls1.2_ticket_auth"
+}
 
 local function support_fast_open()
 	return luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim() == "3"
@@ -70,8 +86,22 @@ o.password = true
 o = s:option(Value, "key", translate("Directly Key"))
 
 o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
-for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
+for _, v in ipairs(encrypt_methods) do o:value(v) end
 o.rmempty = false
+
+o = s:option(ListValue, "protocol", translate("Protocol"))
+for _, v in ipairs(protocols) do o:value(v) end
+o.rmempty = false
+
+o = s:option(Value, "protocol_param", translate("Protocol Param"))
+o.rmempty = true
+
+o = s:option(ListValue, "obfs", translate("OBFS"))
+for _, v in ipairs(obfs_list) do o:value(v) end
+o.rmempty = false
+
+o = s:option(Value, "obfs_param", translate("OBFS Param"))
+o.rmempty = true
 
 o = s:option(Value, "plugin", translate("Plugin Name"))
 o.placeholder = "eg: obfs-local"
