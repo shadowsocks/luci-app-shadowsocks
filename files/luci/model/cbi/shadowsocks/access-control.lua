@@ -89,8 +89,10 @@ s.addremove = true
 s.anonymous = true
 
 o = s:option(Value, "host", translate("Host"))
-luci.sys.net.arptable(function(x)
-	o:value(x["IP address"], "%s (%s)" %{x["IP address"], x["HW address"]})
+luci.ip.neighbors({ family = 4 }, function(entry)
+	if entry.reachable then
+		o:value(entry.dest:string(), "%s (%s)" %{entry.dest:string(), entry.mac})
+	end
 end)
 o.datatype = "ip4addr"
 o.rmempty = false
