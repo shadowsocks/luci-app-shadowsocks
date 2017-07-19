@@ -22,7 +22,7 @@ usage() {
 		    -w <wan_ips>            wan ip of will be forwarded
 		    -I <interface>          proxy only for the given interface
 		    -d <target>             the default target of lan access control
-		    -a <lan_hosts>          lan ip of access control, need a prefix to
+		    -a <lan_hosts>          mac addr of access control, need a prefix to
 		                            define proxy type
 		    -e <extra_args>         extra arguments for iptables
 		    -o                      apply the rules to the OUTPUT chain
@@ -57,9 +57,9 @@ flush_rules() {
 
 ipset_init() {
 	ipset -! restore <<-EOF || return 1
-		create ss_spec_src_ac hash:ip hashsize 64
-		create ss_spec_src_bp hash:ip hashsize 64
-		create ss_spec_src_fw hash:ip hashsize 64
+		create ss_spec_src_ac hash:mac hashsize 64
+		create ss_spec_src_bp hash:mac hashsize 64
+		create ss_spec_src_fw hash:mac hashsize 64
 		create ss_spec_dst_sp hash:net hashsize 64
 		create ss_spec_dst_bp hash:net hashsize 64
 		create ss_spec_dst_fw hash:net hashsize 64

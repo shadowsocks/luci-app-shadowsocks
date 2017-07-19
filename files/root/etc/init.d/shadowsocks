@@ -62,7 +62,7 @@ get_server_ips() {
 
 get_lan_hosts() {
 	uci_bool_by_name $1 enable && \
-		echo "$(uci_get_by_name $1 type),$(uci_get_by_name $1 host)"
+		echo "$(uci_get_by_name $1 type),$(uci_get_by_name $1 macaddr)"
 }
 
 get_plugin_config() {
