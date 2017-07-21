@@ -11,7 +11,6 @@
 	if not values then
 		values = self:cfgvalue(section) or {self.default}
 	end
-	local servers = self.servers or {}
 -%>
 
 <div<%=attr("id", cbid .. ".value.field")%>></div>
@@ -26,15 +25,16 @@
 			while (parent.firstChild) {
 				parent.removeChild(parent.firstChild);
 			}
+
 			for (var i = 0; i < values.length; i++) {
 				var sel = document.createElement("select");
 				sel.id = "<%=cbid%>." + (i + 1);
 				sel.name = "<%=cbid%>";
 				sel.index = i;
 				sel.className = "cbi-input-select";
-				cbi_bind(sel, 'change', function() {
+				sel.onchange = function() {
 					values[this.index] = this.value;
-				});
+				};
 				parent.appendChild(sel);
 
 				for (var j = 0; j < keylist.length; j++) {
@@ -49,16 +49,13 @@
 
 				var btn = document.createElement('img');
 				btn.src = "<%=resource%>" + ((i + 1) < values.length ? "/cbi/remove.gif" : "/cbi/add.gif");
+				btn.index = i;
 				btn.className = 'cbi-image-button';
 				btn.onclick = function() {
 					if (this.src.indexOf('remove') > -1) {
-						var select = this.previousSibling;
-						while (select && select.name != "<%=cbid%>") {
-							select = select.previousSibling;
-						}
-						values.splice(select.index, 1);
+						values.splice(this.index, 1);
 					} else {
-						values.push("nil");
+						values.push("<%=self.default%>");
 					}
 					servers_cbi_init();
 					return false;
