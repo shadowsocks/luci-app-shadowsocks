@@ -3,16 +3,16 @@ config general
 	option startup_delay '0'
 
 config transparent_proxy
-	option main_server 'nil'
+	list main_server 'nil'
 	option udp_relay_server 'nil'
 	option local_port '1234'
 
 config socks5_proxy
-	option server 'nil'
+	list server 'nil'
 	option local_port '1080'
 
 config port_forward
-	option server 'nil'
+	list server 'nil'
 	option local_port '5300'
 	option destination '8.8.4.4:53'
 
