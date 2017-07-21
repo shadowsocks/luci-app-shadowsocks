@@ -74,8 +74,10 @@ if has_redir then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "main_server", translate("Main Server"))
+	o.template = "shadowsocks/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
+	o.default = "nil"
 	o.rmempty = false
 
 	o = s:option(ListValue, "udp_relay_server", translate("UDP-Relay Server"))
@@ -95,8 +97,8 @@ if has_redir then
 	o.rmempty = false
 
 	o = s:option(Value, "mtu", translate("Override MTU"))
-	o.default = 1492
 	o.datatype = "range(296,9200)"
+	o.default = 1492
 	o.rmempty = false
 end
 
@@ -106,8 +108,10 @@ if has_local then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "server", translate("Server"))
+	o.template = "shadowsocks/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
+	o.default = "nil"
 	o.rmempty = false
 
 	o = s:option(Value, "local_port", translate("Local Port"))
@@ -116,8 +120,8 @@ if has_local then
 	o.rmempty = false
 
 	o = s:option(Value, "mtu", translate("Override MTU"))
-	o.default = 1492
 	o.datatype = "range(296,9200)"
+	o.default = 1492
 	o.rmempty = false
 end
 
@@ -127,8 +131,10 @@ if has_tunnel then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "server", translate("Server"))
+	o.template = "shadowsocks/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
+	o.default = "nil"
 	o.rmempty = false
 
 	o = s:option(Value, "local_port", translate("Local Port"))
@@ -141,8 +147,8 @@ if has_tunnel then
 	o.rmempty = false
 
 	o = s:option(Value, "mtu", translate("Override MTU"))
-	o.default = 1492
 	o.datatype = "range(296,9200)"
+	o.default = 1492
 	o.rmempty = false
 end
 
