@@ -21,7 +21,7 @@
 		var vallist = <%=util.serialize_json(self.vallist)%>;
 		var parent = document.getElementById("<%=cbid%>.value.field");
 
-		var servers_cbi_init = function() {
+		var dynamiclist_cbi_init = function() {
 			while (parent.firstChild) {
 				parent.removeChild(parent.firstChild);
 			}
@@ -57,14 +57,14 @@
 					} else {
 						values.push("<%=self.default%>");
 					}
-					servers_cbi_init();
+					dynamiclist_cbi_init();
 					return false;
 				};
 				parent.appendChild(btn);
 				parent.appendChild(document.createElement('br'));
 			}
 		};
-		servers_cbi_init();
+		dynamiclist_cbi_init();
 	}());
 //]]></script>
 
