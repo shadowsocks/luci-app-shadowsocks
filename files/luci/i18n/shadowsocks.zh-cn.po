@@ -94,6 +94,9 @@ msgstr "传递到iptables的额外参数。小心使用！"
 msgid "Password"
 msgstr "密码"
 
+msgid "Plugin"
+msgstr "插件"
+
 msgid "Plugin Arguments"
 msgstr "插件参数"
 

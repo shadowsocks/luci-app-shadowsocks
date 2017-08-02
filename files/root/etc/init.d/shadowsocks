@@ -68,11 +68,12 @@ get_lan_hosts() {
 get_plugin_config() {
 	local plugin=$(uci_get_by_name $1 plugin)
 	local plugin_opts=$(uci_get_by_name $1 plugin_opts)
-	if [ -n "$plugin" -a -n "$plugin_opts" ]; then
+	if [ -n "$plugin" ]; then
 		echo $plugin >>/var/run/ss-plugin
-		echo "
-    \"plugin\": \"$plugin\",
-    \"plugin_opts\": \"$plugin_opts\","
+		echo -e  "\n    \"plugin\": \"$plugin\","
+		if [ -n "$plugin_opts" ]; then
+			echo "    \"plugin_opts\": \"$plugin_opts\","
+		fi
 	fi
 }
 

@@ -42,4 +42,9 @@ function o.cfgvalue(...)
 	return v and v:upper() or "?"
 end
 
+o = s:option(DummyValue, "plugin", translate("Plugin"))
+function o.cfgvalue(...)
+	return Value.cfgvalue(...) or translate("None")
+end
+
 return m
