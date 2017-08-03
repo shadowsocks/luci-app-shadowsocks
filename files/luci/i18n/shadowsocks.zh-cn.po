@@ -61,14 +61,14 @@ msgstr "全局代理"
 msgid "Global Settings"
 msgstr "全局设置"
 
-msgid "Host"
-msgstr "主机"
-
 msgid "LAN Hosts"
 msgstr "内网主机"
 
 msgid "Local Port"
 msgstr "本地端口"
+
+msgid "MAC-Address"
+msgstr "MAC-地址"
 
 msgid "Main Server"
 msgstr "主服务器"
