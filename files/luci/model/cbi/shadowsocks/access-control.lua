@@ -89,10 +89,8 @@ s.addremove = true
 s.anonymous = true
 
 o = s:option(Value, "macaddr", translate("MAC-Address"))
-luci.ip.neighbors({family = 4}, function(n)
-	if n.mac and n.dest then
-		o:value(n.mac, "%s (%s)" %{n.mac, n.dest:string()})
-	end
+luci.sys.net.mac_hints(function(mac, name)
+	o:value(mac, "%s (%s)" %{mac, name})
 end)
 o.datatype = "macaddr"
 o.rmempty = false
