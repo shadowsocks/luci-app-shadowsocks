@@ -6,7 +6,6 @@
 <%+cbi/valueheader%>
 
 <%-
-	local util = require("luci.util")
 	local values = self:formvalue(section)
 	if not values then
 		values = self:cfgvalue(section) or {self.default}
@@ -16,9 +15,9 @@
 <div<%=attr("id", cbid .. ".value.field")%>></div>
 <script type="text/javascript">//<![CDATA[
 	(function() {
-		var values = <%=util.serialize_json(values)%>;
-		var keylist = <%=util.serialize_json(self.keylist)%>;
-		var vallist = <%=util.serialize_json(self.vallist)%>;
+		var values = "<%=table.concat(values, ",")%>".split(",");
+		var keylist = "<%=table.concat(self.keylist, ",")%>".split(",");
+		var vallist = "<%=table.concat(self.vallist, ",")%>".split(",");
 		var parent = document.getElementById("<%=cbid%>.value.field");
 
 		var dynamiclist_cbi_init = function() {
