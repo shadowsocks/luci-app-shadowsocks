@@ -71,16 +71,16 @@ o:value("SS_SPEC_WAN_FW", translate("Global"))
 o.rmempty = false
 
 o = s:option(ListValue, "self_proxy", translate("Self Proxy"))
-o:value("1", translatef("Normal"))
-o:value("0", translatef("Direct"))
-o:value("2", translatef("Global"))
+o:value("1", translate("Normal"))
+o:value("0", translate("Direct"))
+o:value("2", translate("Global"))
 o.rmempty = false
 
 o = s:option(Value, "ipt_ext", translate("Extra arguments"),
 	translate("Passes additional arguments to iptables. Use with care!"))
 o:value("", translate("None"))
-o:value("--dport 22:1023", translate("Proxy port numbers %s only") %{"22~1023"})
-o:value("-m multiport --dports 53,80,443", translate("Proxy port numbers %s only") %{"53,80,443"})
+o:value("--dport 22:1023", translatef("Proxy port numbers %s only", "22~1023"))
+o:value("-m multiport --dports 53,80,443", translatef("Proxy port numbers %s only", "53,80,443"))
 
 -- [[ LAN Hosts ]]--
 s = m:section(TypedSection, "lan_hosts", translate("LAN Hosts"))
@@ -96,9 +96,9 @@ o.datatype = "macaddr"
 o.rmempty = false
 
 o = s:option(ListValue, "type", translate("Proxy Type"))
-o:value("b", translatef("Direct"))
-o:value("g", translatef("Global"))
-o:value("n", translatef("Normal"))
+o:value("b", translate("Direct"))
+o:value("g", translate("Global"))
+o:value("n", translate("Normal"))
 o.rmempty = false
 
 o = s:option(Flag, "enable", translate("Enable"))

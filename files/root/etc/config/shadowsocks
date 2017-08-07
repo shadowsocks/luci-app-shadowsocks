@@ -17,7 +17,7 @@ config port_forward
 	option destination '8.8.4.4:53'
 
 config servers
-	option auth '0'
+	option alias 'sample'
 	option fast_open '0'
 	option server '127.0.0.1'
 	option server_port '8388'
