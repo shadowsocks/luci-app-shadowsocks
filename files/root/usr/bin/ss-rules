@@ -116,14 +116,14 @@ CAT
 gen_lan_host_ipset_entry() {
 	for host in $LAN_HOSTS; do
 		case "${host:0:1}" in
-			n|N)
-				echo add ss_spec_src_ac ${host:2}
-				;;
 			b|B)
 				echo add ss_spec_src_bp ${host:2}
 				;;
 			g|G)
 				echo add ss_spec_src_fw ${host:2}
+				;;
+			n|N)
+				echo add ss_spec_src_ac ${host:2}
 				;;
 		esac
 	done

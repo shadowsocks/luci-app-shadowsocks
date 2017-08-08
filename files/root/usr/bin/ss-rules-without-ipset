@@ -101,14 +101,14 @@ CAT
 gen_lan_host_ipt_entry() {
 	for host in $LAN_HOSTS; do
 		case "${host:0:1}" in
-			n|N)
-				echo "3-A SS_SPEC_LAN_AC -m mac --mac-source ${host:2} -j SS_SPEC_WAN_AC"
-				;;
 			b|B)
-				echo "1-A SS_SPEC_LAN_AC -m mac --mac-source ${host:2} -j RETURN"
+				echo "1 -m mac --mac-source ${host:2} -j RETURN"
 				;;
 			g|G)
-				echo "2-A SS_SPEC_LAN_AC -m mac --mac-source ${host:2} -j SS_SPEC_WAN_FW"
+				echo "2 -m mac --mac-source ${host:2} -j SS_SPEC_WAN_FW"
+				;;
+			n|N)
+				echo "3 -m mac --mac-source ${host:2} -j SS_SPEC_WAN_AC"
 				;;
 		esac
 	done
@@ -150,7 +150,7 @@ include_ac_rules() {
 	:SS_SPEC_WAN_FW - [0:0]
 	$(gen_special_purpose_ip | sed -e "s/\(.*\)/-A SS_SPEC_LAN_DG -d \1 -j RETURN/")
 	-A SS_SPEC_LAN_DG -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
-	$(gen_lan_host_ipt_entry | sort | sed -e s/^.//)
+	$(gen_lan_host_ipt_entry | sort | sed -e "s/^./-A SS_SPEC_LAN_AC/")
 	-A SS_SPEC_LAN_AC -j ${LAN_TARGET:=SS_SPEC_WAN_AC}
 	$(sed -e "s/\(.*\)/-A SS_SPEC_WAN_AC -d \1 -j SS_SPEC_WAN_FW/" ${WAN_FW_LIST:=/dev/null} 2>/dev/null)
 	$(for ip in $WAN_FW_IP; do echo "-A SS_SPEC_WAN_AC -d $ip -j SS_SPEC_WAN_FW"; done)
