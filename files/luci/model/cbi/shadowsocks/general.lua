@@ -25,6 +25,14 @@ if not has_redir and not has_local and not has_tunnel then
 		translate("General Settings")}, '<b style="color:red">shadowsocks-libev binary file not found.</b>')
 end
 
+local function is_running(name)
+	return luci.sys.call("pidof %s >/dev/null" %{name}) == 0
+end
+
+local function get_status(name)
+	return is_running(name) and translate("RUNNING") or translate("NOT RUNNING")
+end
+
 uci:foreach(shadowsocks, "servers", function(s)
 	if s.server and s.server_port then
 		servers[#servers+1] = {name = s[".name"], alias = s.alias or "%s:%s" %{s.server, s.server_port}}
@@ -40,19 +48,19 @@ s.anonymous = true
 
 if has_redir then
 	o = s:option(DummyValue, "_redir_status", translate("Transparent Proxy"))
-	o.value = "<span id=\"_redir_status\">%s</span>" %{translate("Collecting data...")}
+	o.value = "<span id=\"_redir_status\">%s</span>" %{get_status("ss-redir")}
 	o.rawhtml = true
 end
 
 if has_local then
 	o = s:option(DummyValue, "_local_status", translate("SOCKS5 Proxy"))
-	o.value = "<span id=\"_local_status\">%s</span>" %{translate("Collecting data...")}
+	o.value = "<span id=\"_local_status\">%s</span>" %{get_status("ss-local")}
 	o.rawhtml = true
 end
 
 if has_tunnel then
 	o = s:option(DummyValue, "_tunnel_status", translate("Port Forward"))
-	o.value = "<span id=\"_tunnel_status\">%s</span>" %{translate("Collecting data...")}
+	o.value = "<span id=\"_tunnel_status\">%s</span>" %{get_status("ss-tunnel")}
 	o.rawhtml = true
 end
 

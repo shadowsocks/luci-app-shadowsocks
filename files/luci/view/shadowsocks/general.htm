@@ -7,18 +7,16 @@
 
 <script type="text/javascript">//<![CDATA[
 	(function() {
-		var _redir_status = document.getElementById("_redir_status");
-		var _local_status = document.getElementById("_local_status");
-		var _tunnel_status = document.getElementById("_tunnel_status");
+		var elements = {
+			ss_redir: document.getElementById("_redir_status"),
+			ss_local: document.getElementById("_local_status"),
+			ss_tunnel: document.getElementById("_tunnel_status"),
+		};
 		XHR.poll(5, "<%=luci.dispatcher.build_url("admin", "services", "shadowsocks", "status")%>", null, function(x, status) {
-			if (_redir_status) {
-				_redir_status.textContent = status.ss_redir ? "<%:RUNNING%>" : "<%:NOT RUNNING%>";
-			}
-			if (_local_status) {
-				_local_status.textContent = status.ss_local ? "<%:RUNNING%>" : "<%:NOT RUNNING%>";
-			}
-			if (_tunnel_status) {
-				_tunnel_status.textContent = status.ss_tunnel ? "<%:RUNNING%>" : "<%:NOT RUNNING%>";
+			for (var k in elements) {
+				if (elements[k]) {
+					elements[k].textContent = status[k] ? "<%:RUNNING%>" : "<%:NOT RUNNING%>";
+				}
 			}
 		});
 	}());
