@@ -95,11 +95,15 @@ gen_config_file() {
 		{
 		    "server": "$(uci_get_by_name $1 server)",
 		    "server_port": $(uci_get_by_name $1 server_port),
-		    $(get_crypto_config $1)
+		    "password": "$(uci_get_by_name $1 password)",
 		    "method": "$(uci_get_by_name $1 encrypt_method)",
 		    "local_address": "0.0.0.0",$(get_plugin_config $1)
 		    "timeout": $(uci_get_by_name $1 timeout 60),
-		    "reuse_port": true
+		    "reuse_port": true,
+			"protocol": "$(uci_get_by_name $1 protocol)",
+			"protocol_param": "$(uci_get_by_name $1 protocol_param)",
+			"obfs": "$(uci_get_by_name $1 obfs)",
+			"obfs_param": "$(uci_get_by_name $1 obfs_param)"
 		}
 EOF
 	echo $config_file
@@ -184,15 +188,88 @@ ss_tunnel() {
 	done
 }
 
+start_pdnsd() {
+	if [ ! -f /var/pdnsd/pdnsd.cache ]; then
+		mkdir -p /var/pdnsd
+		dd if=/dev/zero of=/var/pdnsd/pdnsd.cache bs=1 count=4 2> /dev/null
+		chown -R nobody.nogroup /var/pdnsd
+	fi
+	pdnsd --daemon -p /var/run/pdnsd.pid
+}
+
+start_dnsforwarder() {
+	local SERVICE_USE_PID=1 SERVICE_WRITE_PID=1 SERVICE_DAEMONIZE=1
+	service_start /usr/bin/dns-forwarder \
+		-b 0.0.0.0 \
+		-p 5300 \
+		-s 8.8.8.8
+}
+
+dns_poisoning() {
+	if [ $(uci_get_by_type dns_poisoning enabled) -eq 1 -o $(uci_get_by_type access_control gfw_mode 0) -eq 1 ]; then
+		local method=$(uci_get_by_type dns_poisoning method)
+		case "$method" in
+			cdns)
+				cdns -c /etc/cdns.json
+			;;
+			pdnsd)
+				start_pdnsd
+			;;
+			dnsforwarder)
+				start_dnsforwarder
+			;;
+			https_dns_proxy)
+				uci set https_dns_proxy.@https_dns_proxy[0].listen_port='5300'
+				uci commit https_dns_proxy
+				/etc/init.d/https_dns_proxy start
+				/etc/init.d/https_dns_proxy disable
+			;;
+		esac
+		[ ! -f /tmp/dnsmasq.d/dnsmasq_gfwlist.conf ] && ln -s /etc/shadowsocks/dnsmasq_gfwlist.conf /tmp/dnsmasq.d/dnsmasq_gfwlist.conf && dnsmasq_restart=1
+	else
+		[ -f /tmp/dnsmasq.d/dnsmasq_gfwlist.conf ] && rm /tmp/dnsmasq.d/dnsmasq_gfwlist.conf && dnsmasq_restart=1
+	fi
+}
+
+gfw_rules() {
+	if [ $(uci_get_by_type access_control gfw_mode 0) -eq 1 ]; then
+		local ipset_name=ss_spec_gfw
+		ipset -! create $ipset_name hash:net hashsize 64
+		idx=$(($(iptables -t nat -L SS_SPEC_WAN_AC | grep all | sed -n -e '/ss_spec_dst_bp/=') +1))
+		iptables -t nat -I SS_SPEC_WAN_AC $idx -m set ! --match-set $ipset_name dst -j RETURN
+		iptables -t mangle -I SS_SPEC_WAN_AC $idx -m set ! --match-set $ipset_name dst -j RETURN
+		local old_md5=$(md5sum /etc/shadowsocks/domain_blacklist.conf)
+		uci get shadowsocks.@access_control[0].domain_black | sed 's/ /\n/g' | sort -u | sed -r 's#(.+)#server=/\1/127.0.0.1\#5300\
+ipset=/\1/'$ipset_name'#g' > /etc/shadowsocks/domain_blacklist.conf
+		[ ! -f /tmp/dnsmasq.d/dnsmasq_gfwlist_ipset.conf ] && ln -s /etc/shadowsocks/dnsmasq_gfwlist_ipset.conf /tmp/dnsmasq.d/dnsmasq_gfwlist_ipset.conf && dnsmasq_restart=1
+		[ ! -f /tmp/dnsmasq.d/domain_blacklist.conf -a -s /etc/shadowsocks/domain_blacklist.conf ] && ln -s /etc/shadowsocks/domain_blacklist.conf /tmp/dnsmasq.d/domain_blacklist.conf && dnsmasq_restart=1
+		[ -f /tmp/dnsmasq.d/domain_blacklist.conf ] && [ "$(md5sum /etc/shadowsocks/domain_blacklist.conf)" != "$old_md5" ] && dnsmasq_restart=1
+		[ ! -s /tmp/dnsmasq.d/domain_blacklist.conf ] && rm /tmp/dnsmasq.d/domain_blacklist.conf && dnsmasq_restart=1
+	else
+		[ -f /tmp/dnsmasq.d/dnsmasq_gfwlist_ipset.conf ] && rm /tmp/dnsmasq.d/dnsmasq_gfwlist_ipset.conf && dnsmasq_restart=1
+		[ -f /tmp/dnsmasq.d/domain_blacklist.conf ] && rm /tmp/dnsmasq.d/domain_blacklist.conf && dnsmasq_restart=1
+	fi
+}
+
+subscribe_corn() {
+	[ -n "$(grep -w "/usr/share/shadowsocks/subscribe.sh" /etc/crontabs/root)" ] && sed -i '/\/usr\/share\/shadowsocks\/subscribe.sh/d' /etc/crontabs/root
+	[ $(uci_get_by_type server_subscribe auto_update 0) -eq 1 ] && echo "0 $(uci_get_by_type server_subscribe auto_update_time) * * * /usr/share/shadowsocks/subscribe.sh" >> /etc/crontabs/root
+}
+
 start() {
-	mkdir -p /var/run /var/etc
-	ss_redir && rules
+	dnsmasq_restart=0
+	mkdir -p /var/run /var/etc /tmp/dnsmasq.d
+	ss_redir && rules && gfw_rules
 	ss_local
 	ss_tunnel
+	subscribe_corn
+	dns_poisoning
+	[ $dnsmasq_restart -eq 1 ] && /etc/init.d/dnsmasq restart >/dev/null 2>&1
 }
 
 boot() {
 	local delay=$(uci_get_by_type general startup_delay 0)
+	[ $(uci_get_by_type access_control gfw_mode 0) -eq 1 ] && [ $delay -lt 10 ] && delay=10
 	(sleep $delay && start >/dev/null 2>&1) &
 	return 0
 }
@@ -203,9 +280,11 @@ kill_all() {
 
 stop() {
 	/usr/bin/ss-rules -f
-	kill_all ss-redir ss-local ss-tunnel
-	if [ -f /var/run/ss-plugin ]; then
-		kill_all $(sort -u /var/run/ss-plugin)
-		rm -f /var/run/ss-plugin
-	fi
+	rm  -rf /var/pdnsd
+	kill_all ss-redir ss-local ss-tunnel cdns pdnsd dns-forwarder
+	/etc/init.d/https_dns_proxy stop >/dev/null 2>&1
+	# if [ -f /var/run/ss-plugin ]; then
+	# 	kill_all $(sort -u /var/run/ss-plugin)
+	# 	rm -f /var/run/ss-plugin
+	# fi
 }
