@@ -165,3 +165,55 @@ msgstr "内网区域"
 
 msgid "Zone WAN"
 msgstr "外网区域"
+
+msgid "Protocol"
+msgstr "协议"
+
+msgid "Protocol Param"
+msgstr "协议参数"
+
+msgid "Obfs"
+msgstr "混淆"
+
+msgid "Obfs Param"
+msgstr "混淆参数"
+
+msgid "China CHNRoute"
+msgstr "国内路由表"
+
+msgid "Server subscription"
+msgstr "服务器订阅"
+
+msgid "Auto Update"
+msgstr "自动更新"
+
+msgid "Through proxy update"
+msgstr "通过代理更新"
+
+msgid "Update time (every day)"
+msgstr "更新时间 （每天）"
+
+msgid "Subscribe URL"
+msgstr "订阅链接"
+
+msgid "Update"
+msgstr "更新"
+
+msgid "DNS poisoning"
+msgstr "DNS 污染"
+
+msgid "Enabled"
+msgstr "启用"
+
+msgid "Processing method"
+msgstr "处理方式"
+
+msgid "Update GFW List"
+msgstr "更新 GFW 列表"
+
+msgid "GFW List Mode"
+msgstr "GFW 列表模式"
+
+msgid "Domain Blacklist"
+msgstr "域名黑名单"
+

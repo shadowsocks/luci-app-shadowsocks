@@ -26,6 +26,26 @@ local encrypt_methods = {
 	"xchacha20-ietf-poly1305",
 }
 
+local protocols = {
+	"origin",
+	"verify_simple",
+	"verify_sha1",
+	"auth_sha1",
+	"auth_sha1_v2",	
+	"auth_sha1_v4",
+	"auth_aes128_md5",
+	"auth_aes128_sha1",
+	"auth_chain_a",
+}
+
+local obfss = {
+	"plain",
+	"http_simple",
+	"http_post",
+	"tls_simple",
+	"tls1.2_ticket_auth",
+}
+
 m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Edit Server")})
 m.redirect = luci.dispatcher.build_url("admin/services/shadowsocks/servers")
 m.sid = sid
@@ -51,6 +71,7 @@ o = s:option(Flag, "no_delay", translate("TCP no-delay"))
 o.rmempty = false
 
 o = s:option(Value, "server", translate("Server Address"))
+o.placeholder = "eg: 192.168.1.1"
 o.datatype = "ipaddr"
 o.rmempty = false
 
@@ -66,16 +87,32 @@ o.rmempty = false
 o = s:option(Value, "password", translate("Password"))
 o.password = true
 
-o = s:option(Value, "key", translate("Directly Key"))
+-- o = s:option(Value, "key", translate("Directly Key"))
 
 o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
 o.rmempty = false
 
-o = s:option(Value, "plugin", translate("Plugin Name"))
-o.placeholder = "eg: obfs-local"
+-- o = s:option(Value, "plugin", translate("Plugin Name"))
+-- o.placeholder = "eg: obfs-local"
 
-o = s:option(Value, "plugin_opts", translate("Plugin Arguments"))
-o.placeholder = "eg: obfs=http;obfs-host=www.bing.com"
+-- o = s:option(Value, "plugin_opts", translate("Plugin Arguments"))
+-- o.placeholder = "eg: obfs=http;obfs-host=www.bing.com"
+
+o = s:option(ListValue, "protocol", translate("Protocol"))
+for _, v in ipairs(protocols) do o:value(v, v:upper()) end
+o.rmempty = false
+
+o = s:option(Value, "protocol_param", translate("Protocol Param"))
+o.datatype = "uinteger"
+o.rmempty = true
+
+o = s:option(ListValue, "obfs", translate("Obfs"))
+for _, v in ipairs(obfss) do o:value(v, v:upper()) end
+o.rmempty = false
+
+o = s:option(Value, "obfs_param", translate("Obfs Param"))
+o.datatype = "host"
+o.rmempty = true
 
 return m

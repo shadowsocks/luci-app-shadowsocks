@@ -160,4 +160,35 @@ if has_tunnel then
 	o.rmempty = false
 end
 
+s = m:section(TypedSection, "dns_poisoning", translate("DNS poisoning"))
+s.anonymous = true
+
+o = s:option(Flag, "enabled", translate("Enabled"))
+o.default = 0
+
+o = s:option(ListValue, "method", translate("Processing method"))
+if has_bin("cdns") then
+	o:value("cdns", "CDNS")
+end
+if has_bin("pdnsd") then
+	o:value("pdnsd", "Pdnsd (OpenDNS)")
+end
+if has_bin("dns-forwarder") then
+	o:value("dnsforwarder", "DNS Forwarder (Google DNS)")
+end
+if has_bin("https_dns_proxy") then
+	o:value("https_dns_proxy", "https_dns_proxy (Google DNS)")
+end
+o:value("unknown","127.0.0.1:5300")
+-- o.default = "cdns"
+o.rmempty = false
+
+if nixio.fs.access("/usr/share/shadowsocks/gfwlist_dnsmasq.sh") then
+	o = s:option(Button,"update",translate("Update GFW List"))
+	o.write = function()
+		luci.sys.call("/usr/share/shadowsocks/gfwlist_dnsmasq.sh >/dev/null 2>&1")
+		luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocks", "general"))
+	end
+end
+
 return m
