@@ -184,7 +184,7 @@ o:value("unknown","127.0.0.1:5300")
 o.rmempty = false
 
 if nixio.fs.access("/usr/share/shadowsocks/gfwlist_dnsmasq.sh") then
-	o = s:option(Button,"update",translate("Update GFW List"))
+	o = s:option(Button,"update",translate("Update poisoning list"))
 	o.write = function()
 		luci.sys.call("/usr/share/shadowsocks/gfwlist_dnsmasq.sh >/dev/null 2>&1")
 		luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocks", "general"))

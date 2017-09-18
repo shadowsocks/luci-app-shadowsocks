@@ -24,8 +24,8 @@ m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Access Con
 s = m:section(TypedSection, "access_control", translate("Zone WAN"))
 s.anonymous = true
 
-o = s:option(Flag, "gfw_mode", translate("GFW List Mode"))
-o.default = 0
+-- o = s:option(Flag, "gfw_mode", translate("GFW List Mode"))
+-- o.default = 0
 
 o = s:option(Value, "wan_bp_list", translate("Bypassed IP List"))
 o:value("/dev/null", translate("NULL - As Global Proxy"))
@@ -47,8 +47,8 @@ o = s:option(DynamicList, "wan_fw_ips", translate("Forwarded IP"))
 o.datatype = "ip4addr"
 o.rmempty = true
 
-o = s:option(DynamicList, "domain_black", translate("Domain Blacklist"))
-o.rmempty = true
+-- o = s:option(DynamicList, "domain_black", translate("Domain Blacklist"))
+-- o.rmempty = true
 
 -- [[ Zone LAN ]]--
 s = m:section(TypedSection, "access_control", translate("Zone LAN"))
