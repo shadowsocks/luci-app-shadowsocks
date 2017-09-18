@@ -30,5 +30,7 @@ config access_control
 	option wan_bp_list '/etc/shadowsocks/china_chnroute.txt'
 
 config server_subscribe
+	option auto_update '0'
 
 config dns_poisoning
+	option enabled '0'
