@@ -47,6 +47,9 @@ o.rmempty = true
 o = s:option(Flag, "fast_open", translate("TCP Fast Open"))
 o.rmempty = false
 
+o = s:option(Flag, "no_delay", translate("TCP no-delay"))
+o.rmempty = false
+
 o = s:option(Value, "server", translate("Server Address"))
 o.datatype = "ipaddr"
 o.rmempty = false
