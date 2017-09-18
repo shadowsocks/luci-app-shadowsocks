@@ -145,6 +145,9 @@ msgstr "自启动延时"
 msgid "TCP Fast Open"
 msgstr "TCP快速打开"
 
+msgid "TCP no-delay"
+msgstr "TCP无延时"
+
 msgid "Transparent Proxy"
 msgstr "透明代理"
 
@@ -205,12 +208,11 @@ msgstr "启用"
 msgid "Processing method"
 msgstr "处理方式"
 
-msgid "Update GFW List"
-msgstr "更新 GFW 列表"
+msgid "Update poisoning list"
+msgstr "更新污染列表"
 
 msgid "GFW List Mode"
 msgstr "GFW 列表模式"
 
 msgid "Domain Blacklist"
 msgstr "域名黑名单"
-
