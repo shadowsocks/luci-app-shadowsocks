@@ -56,6 +56,10 @@ get_arg_tfo() {
 	uci_bool_by_name $1 fast_open && echo "--fast-open"
 }
 
+get_arg_tnd() {
+	uci_bool_by_name $1 no_delay && echo "--no-delay"
+}
+
 get_server_ips() {
 	echo $(uci_get_by_name $1 server)
 }
@@ -93,17 +97,17 @@ gen_config_file() {
 	local config_file=/var/etc/$NAME.$1.json
 	cat <<-EOF >$config_file
 		{
-		    "server": "$(uci_get_by_name $1 server)",
-		    "server_port": $(uci_get_by_name $1 server_port),
-		    "password": "$(uci_get_by_name $1 password)",
-		    "method": "$(uci_get_by_name $1 encrypt_method)",
-		    "local_address": "0.0.0.0",$(get_plugin_config $1)
-		    "timeout": $(uci_get_by_name $1 timeout 60),
-		    "reuse_port": true,
+			"server": "$(uci_get_by_name $1 server)",
+			"server_port": $(uci_get_by_name $1 server_port),
+			"password": "$(uci_get_by_name $1 password)",
+			"method": "$(uci_get_by_name $1 encrypt_method)",
+			"local_address": "0.0.0.0",$(get_plugin_config $1)
+			"timeout": $(uci_get_by_name $1 timeout 60),
 			"protocol": "$(uci_get_by_name $1 protocol)",
 			"protocol_param": "$(uci_get_by_name $1 protocol_param)",
 			"obfs": "$(uci_get_by_name $1 obfs)",
-			"obfs_param": "$(uci_get_by_name $1 obfs_param)"
+			"obfs_param": "$(uci_get_by_name $1 obfs_param)",
+			"reuse_port": true
 		}
 EOF
 	echo $config_file
@@ -206,6 +210,8 @@ start_dnsforwarder() {
 }
 
 dns_poisoning() {
+	local gfw_list=/etc/shadowsocks/dnsmasq_gfwlist.conf
+	local gfw_list_tmp=/var/dnsmasq.d/dnsmasq_gfwlist.conf
 	if [ $(uci_get_by_type dns_poisoning enabled) -eq 1 -o $(uci_get_by_type access_control gfw_mode 0) -eq 1 ]; then
 		local method=$(uci_get_by_type dns_poisoning method)
 		case "$method" in
@@ -225,29 +231,35 @@ dns_poisoning() {
 				/etc/init.d/https_dns_proxy disable
 			;;
 		esac
-		[ ! -f /tmp/dnsmasq.d/dnsmasq_gfwlist.conf ] && ln -s /etc/shadowsocks/dnsmasq_gfwlist.conf /tmp/dnsmasq.d/dnsmasq_gfwlist.conf && dnsmasq_restart=1
+		[ ! -f $gfw_list_tmp ] && ln -s $gfw_list $gfw_list_tmp && dnsmasq_restart=1
 	else
-		[ -f /tmp/dnsmasq.d/dnsmasq_gfwlist.conf ] && rm /tmp/dnsmasq.d/dnsmasq_gfwlist.conf && dnsmasq_restart=1
+		[ -f $gfw_list_tmp ] && rm $gfw_list_tmp && dnsmasq_restart=1
 	fi
 }
 
 gfw_rules() {
+	local gfw_list_ipset=/etc/shadowsocks/dnsmasq_gfwlist_ipset.conf
+	local gfw_list_ipset_tmp=/var/dnsmasq.d/dnsmasq_gfwlist_ipset.conf
+	local domain_blacklist=/etc/shadowsocks/domain_blacklist.conf
+	local domain_blacklist_tmp=/var/dnsmasq.d/domain_blacklist.conf
 	if [ $(uci_get_by_type access_control gfw_mode 0) -eq 1 ]; then
 		local ipset_name=ss_spec_gfw
 		ipset -! create $ipset_name hash:net hashsize 64
 		idx=$(($(iptables -t nat -L SS_SPEC_WAN_AC | grep all | sed -n -e '/ss_spec_dst_bp/=') +1))
 		iptables -t nat -I SS_SPEC_WAN_AC $idx -m set ! --match-set $ipset_name dst -j RETURN
 		iptables -t mangle -I SS_SPEC_WAN_AC $idx -m set ! --match-set $ipset_name dst -j RETURN
-		local old_md5=$(md5sum /etc/shadowsocks/domain_blacklist.conf)
-		uci get shadowsocks.@access_control[0].domain_black | sed 's/ /\n/g' | sort -u | sed -r 's#(.+)#server=/\1/127.0.0.1\#5300\
-ipset=/\1/'$ipset_name'#g' > /etc/shadowsocks/domain_blacklist.conf
-		[ ! -f /tmp/dnsmasq.d/dnsmasq_gfwlist_ipset.conf ] && ln -s /etc/shadowsocks/dnsmasq_gfwlist_ipset.conf /tmp/dnsmasq.d/dnsmasq_gfwlist_ipset.conf && dnsmasq_restart=1
-		[ ! -f /tmp/dnsmasq.d/domain_blacklist.conf -a -s /etc/shadowsocks/domain_blacklist.conf ] && ln -s /etc/shadowsocks/domain_blacklist.conf /tmp/dnsmasq.d/domain_blacklist.conf && dnsmasq_restart=1
-		[ -f /tmp/dnsmasq.d/domain_blacklist.conf ] && [ "$(md5sum /etc/shadowsocks/domain_blacklist.conf)" != "$old_md5" ] && dnsmasq_restart=1
-		[ ! -s /tmp/dnsmasq.d/domain_blacklist.conf ] && rm /tmp/dnsmasq.d/domain_blacklist.conf && dnsmasq_restart=1
+		local old_md5=$(md5sum $domain_blacklist)
+		uci -q get shadowsocks.@access_control[0].domain_black | sed 's/ /\n/g' | sort -u | sed -r 's#(.+)#server=/\1/127.0.0.1\#5300\
+ipset=/\1/'$ipset_name'#g' > $domain_blacklist
+
+		[ ! -f $gfw_list_ipset_tmp ] && ln -s $gfw_list_ipset $gfw_list_ipset_tmp && dnsmasq_restart=1
+
+		[ ! -f $domain_blacklist_tmp -a -s $domain_blacklist ] && ln -s $domain_blacklist $domain_blacklist_tmp && dnsmasq_restart=1
+		[ -f $domain_blacklist_tmp ] && [ "$(md5sum $domain_blacklist)" != "$old_md5" ] && dnsmasq_restart=1
+		[ -f $domain_blacklist_tmp -a ! -s $domain_blacklist_tmp ] && rm $domain_blacklist_tmp && dnsmasq_restart=1
 	else
-		[ -f /tmp/dnsmasq.d/dnsmasq_gfwlist_ipset.conf ] && rm /tmp/dnsmasq.d/dnsmasq_gfwlist_ipset.conf && dnsmasq_restart=1
-		[ -f /tmp/dnsmasq.d/domain_blacklist.conf ] && rm /tmp/dnsmasq.d/domain_blacklist.conf && dnsmasq_restart=1
+		[ -f $gfw_list_ipset_tmp ] && rm $gfw_list_ipset_tmp && dnsmasq_restart=1
+		[ -f $domain_blacklist_tmp ] && rm $domain_blacklist_tmp && dnsmasq_restart=1
 	fi
 }
 
@@ -255,21 +267,20 @@ subscribe_corn() {
 	[ -n "$(grep -w "/usr/share/shadowsocks/subscribe.sh" /etc/crontabs/root)" ] && sed -i '/\/usr\/share\/shadowsocks\/subscribe.sh/d' /etc/crontabs/root
 	[ $(uci_get_by_type server_subscribe auto_update 0) -eq 1 ] && echo "0 $(uci_get_by_type server_subscribe auto_update_time) * * * /usr/share/shadowsocks/subscribe.sh" >> /etc/crontabs/root
 }
-
 start() {
 	dnsmasq_restart=0
-	mkdir -p /var/run /var/etc /tmp/dnsmasq.d
-	ss_redir && rules && gfw_rules
+	mkdir -p /var/run /var/etc /var/dnsmasq.d
+	ss_redir && rules
 	ss_local
 	ss_tunnel
-	subscribe_corn
 	dns_poisoning
+	subscribe_corn
 	[ $dnsmasq_restart -eq 1 ] && /etc/init.d/dnsmasq restart >/dev/null 2>&1
 }
 
 boot() {
 	local delay=$(uci_get_by_type general startup_delay 0)
-	[ $(uci_get_by_type access_control gfw_mode 0) -eq 1 ] && [ $delay -lt 10 ] && delay=10
+	# [ $(uci_get_by_type access_control gfw_mode 0) -eq 1 ] && [ $delay -lt 10 ] && delay=10
 	(sleep $delay && start >/dev/null 2>&1) &
 	return 0
 }
@@ -280,11 +291,11 @@ kill_all() {
 
 stop() {
 	/usr/bin/ss-rules -f
-	rm  -rf /var/pdnsd
 	kill_all ss-redir ss-local ss-tunnel cdns pdnsd dns-forwarder
+	rm  -rf /var/pdnsd
 	/etc/init.d/https_dns_proxy stop >/dev/null 2>&1
-	# if [ -f /var/run/ss-plugin ]; then
-	# 	kill_all $(sort -u /var/run/ss-plugin)
-	# 	rm -f /var/run/ss-plugin
-	# fi
+	if [ -f /var/run/ss-plugin ]; then
+		kill_all $(sort -u /var/run/ss-plugin)
+		rm -f /var/run/ss-plugin
+	fi
 }
