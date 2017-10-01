@@ -35,6 +35,7 @@ local protocols = {
 	"auth_aes128_md5",
 	"auth_aes128_sha1",
 	"auth_chain_a",
+	"auth_chain_b",
 }
 
 local obfss = {
