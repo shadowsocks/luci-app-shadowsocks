@@ -25,7 +25,7 @@ define Package/luci-app-shadowsocks/Default
 	SUBMENU:=3. Applications
 	TITLE:=LuCI Support for shadowsocks-libev
 	PKGARCH:=all
-	DEPENDS:=+iptables +curl +coreutils-base64 $(1)
+	DEPENDS:=+iptables +curl +coreutils-base64 +bash +dnsmasq-full $(1)
 endef
 
 Package/luci-app-shadowsocks = $(call Package/luci-app-shadowsocks/Default,+ipset)
