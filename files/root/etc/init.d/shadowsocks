@@ -229,7 +229,6 @@ dns_poisoning() {
 				uci set https_dns_proxy.@https_dns_proxy[0].listen_port='5300'
 				uci commit https_dns_proxy
 				/etc/init.d/https_dns_proxy start
-			
 			;;
 		esac
 		[ ! -f $gfw_list_tmp ] && ln -s $gfw_list $gfw_list_tmp;dnsmasq_restart=1
