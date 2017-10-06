@@ -1,24 +1,6 @@
 #!/bin/bash
 # Copyright (C) 2017 XiaoShan https://www.mivm.cn
 
-# 检查是否为 IP 地址
-CheckIPAddr() {
-    echo $1 | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$" >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo 1
-        return
-    fi
-    local ipaddr=($(echo $1 | sed 's/\./ /g'))
-    [ ${#ipaddr[@]} -ne 4 ] && echo 1 && return
-    for ((i=0;i<${#ipaddr[@]};i++))
-    do
-        [ ${ipaddr[i]} -gt 255 -a ${ipaddr[i]} -lt 0 ] && echo 1 && return
-    done
-    echo 0
-    return
-}
-
-# URL 安全的 base64 解码
 urlsafe_b64decode() {
     local d="====" data=$(echo $1 | sed 's/_/\//g; s/-/+/g')
     local mod4=$((${#data}%4))
@@ -26,7 +8,18 @@ urlsafe_b64decode() {
     echo $data | base64 -d
 }
 
-# 添加/更新 服务器信息
+CheckIPAddr() {
+    echo $1 | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$" >/dev/null 2>&1
+    [ $? -ne 0 ] && return 1
+    local ipaddr=($(echo $1 | sed 's/\./ /g'))
+    [ ${#ipaddr[@]} -ne 4 ] && return 1
+    for ((i=0;i<${#ipaddr[@]};i++))
+    do
+        [ ${ipaddr[i]} -gt 255 -a ${ipaddr[i]} -lt 0 ] && return 1
+    done
+    return 0
+}
+
 Server_Update() {
     local uci_set="uci -q set shadowsocks.@servers[$1]."
     ${uci_set}alias="[$ssr_group] $ssr_remarks"
@@ -41,32 +34,30 @@ Server_Update() {
     ${uci_set}obfs_param="$ssr_obfsparam"
 }
 
-subscribe_url=($(uci get shadowsocks.@server_subscribe[0].subscribe_url)) # 获取订阅链接列表
+subscribe_url=($(uci get shadowsocks.@server_subscribe[0].subscribe_url))
 [ ${#subscribe_url[@]} -eq 0 ] && exit 1
 [ $(uci -q get shadowsocks.@server_subscribe[0].proxy || echo 0) -eq 0 ] && /etc/init.d/shadowsocks stop >/dev/null 2>&1
 for ((o=0;o<${#subscribe_url[@]};o++))
 do
     subscribe_data=$(curl -s -L --connect-timeout 3 ${subscribe_url[o]})
     curl_code=$?
-    if [ $curl_code -eq 0 ];then # curl 返回代码为非 0 即获取失败
-        ssr_url=($(echo $subscribe_data | base64 -d | sed 's/\r//g')) # 解码订阅数据并删除 \r 换行符
-        # echo ${ssr_url[*]}
-        # exit
-        subscribe_max=$(echo ${ssr_url[0]} | grep -i MAX= | awk -F = '{print $2}') # 获取 MAX 随机值
+    if [ $curl_code -eq 0 ];then
+        ssr_url=($(echo $subscribe_data | base64 -d | sed 's/\r//g')) # 解码数据并删除 \r 换行符
+        subscribe_max=$(echo ${ssr_url[0]} | grep -i MAX= | awk -F = '{print $2}') 
         subscribe_max_x=()
         if [ -n "$subscribe_max" ]; then
             while [ ${#subscribe_max_x[@]} -ne $subscribe_max ]
             do
-                if [ ${#ssr_url[@]} -ge 10 ]; then # 链接数量如果大于 10 有几率获取两位的随机数
-                    if [ $(($(head -n 256 /dev/urandom | tr -dc "123456789" | head -c3)%2)) -eq 1 ]; then # 获取随机数并求2的余数，不等于1获取两位数
-                        temp_x=$(head -n 256 /dev/urandom | tr -dc "123456789" | head -c1)
+                if [ ${#ssr_url[@]} -ge 10 ]; then
+                    if [ $((${RANDOM:0:2}%2)) -eq 0 ]; then
+                        temp_x=${RANDOM:0:1}
                     else
-                        temp_x=$(head -n 256 /dev/urandom | tr -dc "123456789" | head -c2)
+                        temp_x=${RANDOM:0:2}
                     fi
                 else
-                    temp_x=$(head -n 256 /dev/urandom | tr -dc "123456789" | head -c1)
+                    temp_x=${RANDOM:0:1}
                 fi
-                [ $temp_x -lt ${#ssr_url[@]} -a -z "$(echo "${subscribe_max_x[*]}" | grep -w ${temp_x})" ] && subscribe_max_x[${#subscribe_max_x[@]}]="$temp_x" # 判断获取的随机数是否大于链接数 是否重复
+                [ $temp_x -lt ${#ssr_url[@]} -a -z "$(echo "${subscribe_max_x[*]}" | grep -w ${temp_x})" ] && subscribe_max_x[${#subscribe_max_x[@]}]="$temp_x"
             done
         else
             subscribe_max=${#ssr_url[@]}
@@ -86,11 +77,7 @@ do
             done
             for ((x=0;x<$subscribe_max;x++)) # 循环链接
             do
-                if [ ${#subscribe_max_x[@]} -eq 0 ]; then
-                    temp_x=$x
-                else
-                    temp_x=${subscribe_max_x[x]}
-                fi
+                [ ${#subscribe_max_x[@]} -eq 0 ] && temp_x=$x || temp_x=${subscribe_max_x[x]}
                 temp_info=$(urlsafe_b64decode ${ssr_url[temp_x]//ssr:\/\//}) # 解码 SSR 链接
                 # 依次获取基本信息
                 info=${temp_info///?*/}
@@ -121,7 +108,20 @@ do
                         ;;
                     esac
                 done
-                [ $(CheckIPAddr $ssr_host) -eq 1 ] && ssr_host=$(nslookup $ssr_host | grep "Address 1" | awk '{print $3}') && [ -z "$ssr_host" ] && continue # 使用 nslookup 解析域名并获取 IP
+                CheckIPAddr $ssr_host
+                if [ $? -ne 0 ]; then
+                    ssr_hosts=($(nslookup $ssr_host | grep 'Address [1-9]' | awk '{print $3}'))
+                    
+                    for ((i=0;i<${#ssr_hosts[@]};i++))
+                    do
+                        ssr_host=${ssr_hosts[i]}
+                        CheckIPAddr $ssr_host
+                        [ $? -eq 0 ] && continue
+                        ssr_host=""
+                    done
+                    [ -z "$ssr_host" ] && continue
+                fi
+                
                 uci_s=$(uci show shadowsocks | grep @servers | grep server= | grep -n -w $ssr_host )
                 if [ -n "$uci_s" ]; then # 判断当前服务器信息是否存在
                     uci_x=$((${uci_s//:*/} - 1))
@@ -143,7 +143,7 @@ do
                 # echo "混淆参数: $ssr_obfsparam"
                 # echo "备注: $ssr_remarks"
             done
-            for ((x=0;x<${#temp_host_o[@]};x++)) # 新旧服务器信息匹配，旧服务器不存在则删除
+            for ((x=0;x<${#temp_host_o[@]};x++))
             do
                 if [ -z "$(echo "$subscribe_x" | grep -w ${temp_host_o[x]})" ]; then
                     temp_host_x=$(uci show shadowsocks | grep @servers | grep server= | grep -n ${temp_host_o[x]})
@@ -152,15 +152,13 @@ do
                 fi
             done
             subscribe_log="$ssr_group 服务器订阅更新成功 服务器数量: ${#ssr_url[@]} 新增服务器: $subscribe_n 删除服务器: $subscribe_o"
-            [ ${#subscribe_max_x[@]} -ne 0 ] && subscribe_log="$subscribe_log 随机获取: ${#subscribe_max_x[@]}"
             logger -st shadowsocks_subscribe[$$] -p6 "$subscribe_log"
             uci commit shadowsocks
         else
-            logger -st shadowsocks_subscribe[$$] -p3 "${subscribe_url[$o]} 订阅文件解析失败 无法获取 Group"
+            logger -st shadowsocks_subscribe[$$] -p3 "${subscribe_url[$o]} 订阅数据解析失败 无法获取 Group"
         fi
-        rm -rf /tmp/shadowsocks_subscribe.txt
     else
-        logger -st shadowsocks_subscribe[$$] -p3 "${subscribe_url[$o]} 订阅文件获取失败 错误代码: $curl_code"
+        logger -st shadowsocks_subscribe[$$] -p3 "${subscribe_url[$o]} 订阅数据获取失败 错误代码: $curl_code"
     fi
 done
 /etc/init.d/shadowsocks restart >/dev/null 2>&1

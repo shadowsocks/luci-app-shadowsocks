@@ -201,17 +201,17 @@ start_pdnsd() {
 	pdnsd --daemon -p /var/run/pdnsd.pid
 }
 
-start_dnsforwarder() {
-	local SERVICE_USE_PID=1 SERVICE_WRITE_PID=1 SERVICE_DAEMONIZE=1
-	service_start /usr/bin/dns-forwarder \
-		-b 0.0.0.0 \
-		-p 5300 \
-		-s 8.8.8.8
+get_dnsmasq_confdir() {
+	local pid=$(pidof dnsmasq)
+	local conf_dir=$(cat /etc/dnsmasq.conf | grep conf-dir= | sed 's/.*=//')
+	local conf_tmp=$(cat /proc/$pid/cmdline | grep dnsmasq.conf)
+	local conf_dir_tmp=$(cat $conf_tmp | grep conf-dir= | sed 's/.*=//')
+	[ -n "$conf_dir" ] && echo $conf_dir || echo $conf_dir_tmp
 }
 
 dns_poisoning() {
 	local gfw_list=/etc/shadowsocks/dnsmasq_gfwlist.conf
-	local gfw_list_tmp=/var/dnsmasq.d/dnsmasq_gfwlist.conf
+	local gfw_list_tmp=$dnsmasq_confdir/dnsmasq_gfwlist.conf
 	if [ $(uci_get_by_type dns_poisoning enabled) -eq 1 -o $(uci_get_by_type access_control gfw_mode 0) -eq 1 ]; then
 		local method=$(uci_get_by_type dns_poisoning method)
 		case "$method" in
@@ -222,19 +222,22 @@ dns_poisoning() {
 				start_pdnsd
 			;;
 			dnsforwarder)
-				start_dnsforwarder
+				uci set dns-forwarder.@dns-forwarder[0].enable=1
+				/etc/init.d/dns-forwarder start
 			;;
 			https_dns_proxy)
 				uci set https_dns_proxy.@https_dns_proxy[0].listen_port='5300'
 				uci commit https_dns_proxy
 				/etc/init.d/https_dns_proxy start
-				/etc/init.d/https_dns_proxy disable
+			
 			;;
 		esac
-		[ ! -f $gfw_list_tmp ] && ln -s $gfw_list $gfw_list_tmp && dnsmasq_restart=1
+		[ ! -f $gfw_list_tmp ] && ln -s $gfw_list $gfw_list_tmp;dnsmasq_restart=1
 	else
-		[ -f $gfw_list_tmp ] && rm $gfw_list_tmp && dnsmasq_restart=1
+		[ -f $gfw_list_tmp ] && rm $gfw_list_tmp;dnsmasq_restart=1
 	fi
+	/etc/init.d/dns-forwarder disable
+	/etc/init.d/https_dns_proxy disable
 }
 
 gfw_rules() {
@@ -268,8 +271,9 @@ subscribe_corn() {
 	[ $(uci_get_by_type server_subscribe auto_update 0) -eq 1 ] && echo "0 $(uci_get_by_type server_subscribe auto_update_time) * * * /usr/share/shadowsocks/subscribe.sh" >> /etc/crontabs/root
 }
 start() {
+	dnsmasq_confdir=$(get_dnsmasq_confdir)
 	dnsmasq_restart=0
-	mkdir -p /var/run /var/etc /var/dnsmasq.d
+	mkdir -p /var/run /var/etc
 	ss_redir && rules
 	ss_local
 	ss_tunnel
@@ -291,8 +295,9 @@ kill_all() {
 
 stop() {
 	/usr/bin/ss-rules -f
-	kill_all ss-redir ss-local ss-tunnel cdns pdnsd dns-forwarder
+	kill_all ss-redir ss-local ss-tunnel cdns pdnsd
 	rm  -rf /var/pdnsd
+	/etc/init.d/dns-forwarder stop >/dev/null 2>&1
 	/etc/init.d/https_dns_proxy stop >/dev/null 2>&1
 	if [ -f /var/run/ss-plugin ]; then
 		kill_all $(sort -u /var/run/ss-plugin)
