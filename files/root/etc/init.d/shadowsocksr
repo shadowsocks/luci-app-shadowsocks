@@ -182,7 +182,14 @@ get_dnsmasq_confdir() {
 	local conf_dir=$(cat /etc/dnsmasq.conf | grep conf-dir= | sed 's/.*=//')
 	local conf_tmp=$(cat /proc/$pid/cmdline | grep dnsmasq.conf)
 	local conf_dir_tmp=$(cat $conf_tmp | grep conf-dir= | sed 's/.*=//')
-	[ -n "$conf_dir" ] && echo $conf_dir || echo $conf_dir_tmp
+	if [ -n "$conf_dir" ]; then
+		echo $conf_dir
+	elif [  -n "$conf_dir_tmp" ];then
+		echo $conf_dir_tmp
+	else
+		echo "/tmp/dnsmasq.d"
+	fi
+
 }
 
 dns_poisoning() {
@@ -194,9 +201,6 @@ dns_poisoning() {
 			cdns)
 				cdns -c /etc/cdns.json
 			;;
-			pdnsd)
-				start_pdnsd
-			;;
 			dnsforwarder)
 				uci set dns-forwarder.@dns-forwarder[0].enable=1
 				/etc/init.d/dns-forwarder start
@@ -205,6 +209,9 @@ dns_poisoning() {
 				uci set https_dns_proxy.@https_dns_proxy[0].listen_port='5300'
 				uci commit https_dns_proxy
 				/etc/init.d/https_dns_proxy start
+			;;
+			pdnsd)
+				start_pdnsd
 			;;
 		esac
 		[ ! -f $gfw_list_tmp ] && ln -s $gfw_list $gfw_list_tmp;dnsmasq_restart=1

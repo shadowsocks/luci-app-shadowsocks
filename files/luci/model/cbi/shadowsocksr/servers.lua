@@ -4,10 +4,14 @@
 local m, s, o
 local shadowsocksr = "shadowsocksr"
 
+local function has_bin(name)
+	return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
+end
+
 m = Map(shadowsocksr, "%s - %s" %{translate("ShadowSocksR"), translate("Servers Manage")})
 
 -- Server Subscribe
-if nixio.fs.access("/usr/share/shadowsocksr/subscribe.sh") then
+if nixio.fs.access("/usr/share/shadowsocksr/subscribe.sh") and has_bin("base64") and has_bin("curl") and has_bin("bash") then
 	s = m:section(TypedSection, "server_subscribe", translate("Server subscription"))
 	s.anonymous = true
 

@@ -160,35 +160,40 @@ if has_tunnel then
 	o.rmempty = false
 end
 
-s = m:section(TypedSection, "dns_poisoning", translate("DNS poisoning"))
-s.anonymous = true
 
-o = s:option(Flag, "enabled", translate("Enabled"))
-o.default = 0
+if nixio.fs.access("/usr/share/dnsmasq/trust-anchors.conf") then
+	s = m:section(TypedSection, "dns_poisoning", translate("DNS poisoning"))
+	s.anonymous = true
 
-o = s:option(ListValue, "method", translate("Processing method"))
-if has_bin("cdns") then
-	o:value("cdns", "CDNS")
-end
-if has_bin("pdnsd") then
-	o:value("pdnsd", "Pdnsd (OpenDNS)")
-end
-if has_bin("dns-forwarder") then
-	o:value("dnsforwarder", "DNS Forwarder (Google DNS)")
-end
-if has_bin("https_dns_proxy") then
-	o:value("https_dns_proxy", "https_dns_proxy (Google DNS)")
-end
-o:value("unknown","127.0.0.1:5300")
--- o.default = "cdns"
-o.rmempty = false
-
-if nixio.fs.access("/usr/share/shadowsocksr/gfwlist_dnsmasq.sh") then
-	o = s:option(Button,"update",translate("Update poisoning list"))
-	o.write = function()
-		luci.sys.call("/usr/share/shadowsocksr/gfwlist_dnsmasq.sh >/dev/null 2>&1")
-		luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocksr", "general"))
+	o = s:option(Flag, "enabled", translate("Enabled"))
+	o.default = 0
+	
+	o = s:option(ListValue, "method", translate("Processing method"))
+	if has_bin("cdns") then
+		o:value("cdns", "CDNS")
+	end
+	if has_bin("pdnsd") then
+		o:value("pdnsd", "Pdnsd (OpenDNS)")
+	end
+	if has_bin("dns-forwarder") then
+		o:value("dnsforwarder", "DNS Forwarder (Google DNS)")
+	end
+	if has_bin("https_dns_proxy") then
+		o:value("https_dns_proxy", "https_dns_proxy (Google DNS)")
+	end
+	o:value("unknown","127.0.0.1:5300")
+	-- o.default = "cdns"
+	o.rmempty = false
+	
+	if nixio.fs.access("/usr/share/shadowsocksr/gfwlist_dnsmasq.sh") and has_bin("base64") and has_bin("curl") then
+		o = s:option(Button,"update",translate("Update poisoning list"))
+		o.write = function()
+			luci.sys.call("/usr/share/shadowsocksr/gfwlist_dnsmasq.sh >/dev/null 2>&1")
+			luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocksr", "general"))
+		end
 	end
 end
+
+
 
 return m

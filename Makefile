@@ -25,7 +25,7 @@ define Package/$(PKG_NAME)
 	SUBMENU:=3. Applications
 	TITLE:=LuCI Support for shadowsocksr-libev
 	PKGARCH:=all
-	DEPENDS:=+iptables +dnsmasq-full +ipset +curl +coreutils-base64 +bash
+	DEPENDS:=+iptables +ipset
 endef
 
 define Package/$(PKG_NAME)/description
