@@ -9,7 +9,7 @@
 START=90
 STOP=15
 
-NAME=shadowsocks
+NAME=shadowsocksr
 EXTRA_COMMANDS=rules
 
 uci_get_by_name() {
@@ -69,30 +69,6 @@ get_lan_hosts() {
 		echo "$(uci_get_by_name $1 type),$(uci_get_by_name $1 macaddr)"
 }
 
-get_plugin_config() {
-	local plugin=$(uci_get_by_name $1 plugin)
-	local plugin_opts=$(uci_get_by_name $1 plugin_opts)
-	if [ -n "$plugin" ]; then
-		echo $plugin >>/var/run/ss-plugin
-		echo -e  "\n    \"plugin\": \"$plugin\","
-		if [ -n "$plugin_opts" ]; then
-			echo "    \"plugin_opts\": \"$plugin_opts\","
-		fi
-	fi
-}
-
-get_crypto_config() {
-	local key=$(uci_get_by_name $1 key)
-	local password=$(uci_get_by_name $1 password)
-	if [ -n "$key" ]; then
-		echo "\"key\": \"$key\","
-	elif [ -n "$password" ]; then
-		echo "\"password\": \"$password\","
-	else
-		logger -st $NAME -p3 "The password or key is not set."
-	fi
-}
-
 gen_config_file() {
 	local config_file=/var/etc/$NAME.$1.json
 	cat <<-EOF >$config_file
@@ -115,7 +91,7 @@ EOF
 
 start_rules() {
 	config_load $NAME
-	/usr/bin/ss-rules \
+	/usr/bin/ssr-rules \
 		-s "$(config_foreach get_server_ips servers)" \
 		-l "$(uci_get_by_type transparent_proxy local_port 1234)" \
 		-B "$(uci_get_by_type access_control wan_bp_list)" \
@@ -130,20 +106,20 @@ start_rules() {
 }
 
 rules() {
-	pidof ss-redir >/dev/null || return 0
-	start_rules || /usr/bin/ss-rules -f
+	pidof ssr-redir >/dev/null || return 0
+	start_rules || /usr/bin/ssr-rules -f
 }
 
 start_redir() {
 	validate_server $1 || return 0
-	ss-redir -c $(gen_config_file $1) $2 $(get_arg_tfo $1) \
+	ssr-redir -c $(gen_config_file $1) $2 $(get_arg_tfo $1) \
 		-l $(uci_get_by_type transparent_proxy local_port 1234) \
 		--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
-		-f /var/run/ss-redir$3-$1.pid
+		-f /var/run/ssr-redir$3-$1.pid
 }
 
-ss_redir() {
-	command -v ss-redir >/dev/null 2>&1 || return 1
+ssr_redir() {
+	command -v ssr-redir >/dev/null 2>&1 || return 1
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
 	has_valid_server $main_server || return 1
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
@@ -163,14 +139,14 @@ ss_redir() {
 
 start_local() {
 	validate_server $1 || return 0
-	ss-local -c $(gen_config_file $1) -u $(get_arg_tfo $1) \
+	ssr-local -c $(gen_config_file $1) -u $(get_arg_tfo $1) \
 		-l $(uci_get_by_type socks5_proxy local_port 1080) \
 		--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
-		-f /var/run/ss-local-$1.pid
+		-f /var/run/ssr-local-$1.pid
 }
 
-ss_local() {
-	command -v ss-local >/dev/null 2>&1 || return 0
+ssr_local() {
+	command -v ssr-local >/dev/null 2>&1 || return 0
 	for server in $(uci_get_by_type socks5_proxy server); do
 		start_local $server
 	done
@@ -178,15 +154,15 @@ ss_local() {
 
 start_tunnel() {
 	validate_server $1 || return 0
-	ss-tunnel -c $(gen_config_file $1) -u \
+	ssr-tunnel -c $(gen_config_file $1) -u \
 		-l $(uci_get_by_type port_forward local_port 5300) \
 		-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
 		--mtu $(uci_get_by_type port_forward mtu 1492) \
-		-f /var/run/ss-tunnel-$1.pid
+		-f /var/run/ssr-tunnel-$1.pid
 }
 
-ss_tunnel() {
-	command -v ss-tunnel >/dev/null 2>&1 || return 0
+ssr_tunnel() {
+	command -v ssr-tunnel >/dev/null 2>&1 || return 0
 	for server in $(uci_get_by_type port_forward server); do
 		start_tunnel $server
 	done
@@ -273,9 +249,9 @@ start() {
 	dnsmasq_confdir=$(get_dnsmasq_confdir)
 	dnsmasq_restart=0
 	mkdir -p /var/run /var/etc
-	ss_redir && rules
-	ss_local
-	ss_tunnel
+	ssr_redir && rules
+	ssr_local
+	ssr_tunnel
 	dns_poisoning
 	subscribe_corn
 	[ $dnsmasq_restart -eq 1 ] && /etc/init.d/dnsmasq restart >/dev/null 2>&1
@@ -283,7 +259,6 @@ start() {
 
 boot() {
 	local delay=$(uci_get_by_type general startup_delay 0)
-	# [ $(uci_get_by_type access_control gfw_mode 0) -eq 1 ] && [ $delay -lt 10 ] && delay=10
 	(sleep $delay && start >/dev/null 2>&1) &
 	return 0
 }
@@ -293,13 +268,9 @@ kill_all() {
 }
 
 stop() {
-	/usr/bin/ss-rules -f
-	kill_all ss-redir ss-local ss-tunnel cdns pdnsd
+	/usr/bin/ssr-rules -f
+	kill_all ssr-redir ssr-local ssr-tunnel cdns pdnsd
 	rm  -rf /var/pdnsd
 	/etc/init.d/dns-forwarder stop >/dev/null 2>&1
 	/etc/init.d/https_dns_proxy stop >/dev/null 2>&1
-	if [ -f /var/run/ss-plugin ]; then
-		kill_all $(sort -u /var/run/ss-plugin)
-		rm -f /var/run/ss-plugin
-	fi
 }

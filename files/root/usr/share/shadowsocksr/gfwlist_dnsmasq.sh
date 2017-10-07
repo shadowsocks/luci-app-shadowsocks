@@ -9,7 +9,7 @@ clean_and_exit(){
     exit $1
 }
 
-cd /etc/shadowsocks
+cd /etc/shadowsocksr
 
 BASE64_DECODE='base64 -d'
 SED_ERES='sed -r'

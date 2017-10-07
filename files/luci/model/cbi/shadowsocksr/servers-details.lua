@@ -2,7 +2,7 @@
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
-local shadowsocks = "shadowsocks"
+local shadowsocksr = "shadowsocksr"
 local sid = arg[1]
 local encrypt_methods = {
 	"none",
@@ -46,12 +46,12 @@ local obfss = {
 	"tls1.2_ticket_auth",
 }
 
-m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Edit Server")})
-m.redirect = luci.dispatcher.build_url("admin/services/shadowsocks/servers")
+m = Map(shadowsocksr, "%s - %s" %{translate("ShadowSocksR"), translate("Edit Server")})
+m.redirect = luci.dispatcher.build_url("admin/services/shadowsocksr/servers")
 m.sid = sid
-m.template = "shadowsocks/servers-details"
+m.template = "shadowsocksr/servers-details"
 
-if m.uci:get(shadowsocks, sid) ~= "servers" then
+if m.uci:get(shadowsocksr, sid) ~= "servers" then
 	luci.http.redirect(m.redirect)
 	return
 end
@@ -66,9 +66,6 @@ o.rmempty = true
 
 o = s:option(Flag, "fast_open", translate("TCP Fast Open"))
 o.rmempty = false
-
--- o = s:option(Flag, "no_delay", translate("TCP no-delay"))
--- o.rmempty = false
 
 o = s:option(Value, "server", translate("Server Address"))
 o.placeholder = "eg: 192.168.1.1"
@@ -87,17 +84,9 @@ o.rmempty = false
 o = s:option(Value, "password", translate("Password"))
 o.password = true
 
--- o = s:option(Value, "key", translate("Directly Key"))
-
 o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
 o.rmempty = false
-
--- o = s:option(Value, "plugin", translate("Plugin Name"))
--- o.placeholder = "eg: obfs-local"
-
--- o = s:option(Value, "plugin_opts", translate("Plugin Arguments"))
--- o.placeholder = "eg: obfs=http;obfs-host=www.bing.com"
 
 o = s:option(ListValue, "protocol", translate("Protocol"))
 for _, v in ipairs(protocols) do o:value(v, v:upper()) end

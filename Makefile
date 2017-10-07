@@ -7,7 +7,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=luci-app-shadowsocks
+PKG_NAME:=luci-app-shadowsocksr
 PKG_VERSION:=1.8.1
 PKG_RELEASE:=1
 
@@ -19,23 +19,18 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/luci-app-shadowsocks/Default
+define Package/$(PKG_NAME)
 	SECTION:=luci
 	CATEGORY:=LuCI
 	SUBMENU:=3. Applications
-	TITLE:=LuCI Support for shadowsocks-libev
+	TITLE:=LuCI Support for shadowsocksr-libev
 	PKGARCH:=all
-	DEPENDS:=+iptables +curl +coreutils-base64 +bash +dnsmasq-full $(1)
+	DEPENDS:=+iptables +dnsmasq-full +ipset +curl +coreutils-base64 +bash
 endef
 
-Package/luci-app-shadowsocks = $(call Package/luci-app-shadowsocks/Default,+ipset)
-# Package/luci-app-shadowsocks-without-ipset = $(call Package/luci-app-shadowsocks/Default)
-
-define Package/luci-app-shadowsocks/description
+define Package/$(PKG_NAME)/description
 	LuCI Support for shadowsocks-libev.
 endef
-
-# Package/luci-app-shadowsocks-without-ipset/description = $(Package/luci-app-shadowsocks/description)
 
 define Build/Prepare
 	$(foreach po,$(wildcard ${CURDIR}/files/luci/i18n/*.po), \
@@ -48,51 +43,44 @@ endef
 define Build/Compile
 endef
 
-define Package/luci-app-shadowsocks/postinst
+define Package/$(PKG_NAME)/postinst
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	if [ -f /etc/uci-defaults/luci-shadowsocks ]; then
-		( . /etc/uci-defaults/luci-shadowsocks ) && \
-		rm -f /etc/uci-defaults/luci-shadowsocks
+	if [ -f /etc/uci-defaults/luci-shadowsocksr ]; then
+		( . /etc/uci-defaults/luci-shadowsocksr ) && \
+		rm -f /etc/uci-defaults/luci-shadowsocksr
 	fi
 	rm -rf /tmp/luci-indexcache /tmp/luci-modulecache
 fi
 exit 0
 endef
 
-# Package/luci-app-shadowsocks-without-ipset/postinst = $(Package/luci-app-shadowsocks/postinst)
-
-define Package/luci-app-shadowsocks/conffiles
-/etc/config/shadowsocks
+define Package/$(PKG_NAME)/conffiles
+/etc/config/shadowsocksr
 endef
 
-# Package/luci-app-shadowsocks-without-ipset/conffiles = $(Package/luci-app-shadowsocks/conffiles)
-
-define Package/luci-app-shadowsocks/install
+define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/shadowsocks.*.lmo $(1)/usr/lib/lua/luci/i18n/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/shadowsocksr.*.lmo $(1)/usr/lib/lua/luci/i18n/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DATA) ./files/luci/controller/*.lua $(1)/usr/lib/lua/luci/controller/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/shadowsocks
-	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocks/*.lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocks/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/shadowsocks
-	$(INSTALL_DATA) ./files/luci/view/shadowsocks/*.htm $(1)/usr/lib/lua/luci/view/shadowsocks/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/shadowsocksr
+	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocksr/*.lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocksr/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/shadowsocksr
+	$(INSTALL_DATA) ./files/luci/view/shadowsocksr/*.htm $(1)/usr/lib/lua/luci/view/shadowsocksr/
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) ./files/root/etc/config/shadowsocks $(1)/etc/config/shadowsocks
+	$(INSTALL_DATA) ./files/root/etc/config/shadowsocksr $(1)/etc/config/shadowsocksr
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/root/etc/init.d/shadowsocks $(1)/etc/init.d/shadowsocks
+	$(INSTALL_BIN) ./files/root/etc/init.d/shadowsocksr $(1)/etc/init.d/shadowsocksr
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/root/etc/uci-defaults/luci-shadowsocks $(1)/etc/uci-defaults/luci-shadowsocks
+	$(INSTALL_BIN) ./files/root/etc/uci-defaults/luci-shadowsocksr $(1)/etc/uci-defaults/luci-shadowsocksr
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./files/root/usr/bin/ss-rules$(2) $(1)/usr/bin/ss-rules
+	$(INSTALL_BIN) ./files/root/usr/bin/ssr-rules$(2) $(1)/usr/bin/ssr-rules
 	
-	$(INSTALL_DIR) $(1)/etc/shadowsocks
-	$(INSTALL_DATA) ./files/root/etc/shadowsocks/* $(1)/etc/shadowsocks/
-	$(INSTALL_DIR) $(1)/usr/share/shadowsocks
-	$(INSTALL_BIN) ./files/root/usr/share/shadowsocks/*.sh $(1)/usr/share/shadowsocks/
+	$(INSTALL_DIR) $(1)/etc/shadowsocksr
+	$(INSTALL_DATA) ./files/root/etc/shadowsocksr/* $(1)/etc/shadowsocksr/
+	$(INSTALL_DIR) $(1)/usr/share/shadowsocksr
+	$(INSTALL_BIN) ./files/root/usr/share/shadowsocksr/*.sh $(1)/usr/share/shadowsocksr/
 endef
 
-# Package/luci-app-shadowsocks-without-ipset/install = $(call Package/luci-app-shadowsocks/install,$(1),-without-ipset)
-
-$(eval $(call BuildPackage,luci-app-shadowsocks))
-# $(eval $(call BuildPackage,luci-app-shadowsocks-without-ipset))
+$(eval $(call BuildPackage,$(PKG_NAME)))

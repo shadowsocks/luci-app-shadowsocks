@@ -2,7 +2,7 @@
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
-local shadowsocks = "shadowsocks"
+local shadowsocksr = "shadowsocksr"
 local uci = luci.model.uci.cursor()
 local servers = {}
 
@@ -11,7 +11,7 @@ local function has_bin(name)
 end
 
 local function has_ss_bin()
-	return has_bin("ss-redir"), has_bin("ss-local"), has_bin("ss-tunnel")
+	return has_bin("ssr-redir"), has_bin("ssr-local"), has_bin("ssr-tunnel")
 end
 
 local function has_udp_relay()
@@ -21,8 +21,8 @@ end
 local has_redir, has_local, has_tunnel = has_ss_bin()
 
 if not has_redir and not has_local and not has_tunnel then
-	return Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"),
-		translate("General Settings")}, '<b style="color:red">shadowsocks-libev binary file not found.</b>')
+	return Map(shadowsocksr, "%s - %s" %{translate("ShadowSocksR"),
+		translate("General Settings")}, '<b style="color:red">shadowsocksr-libev binary file not found.</b>')
 end
 
 local function is_running(name)
@@ -33,14 +33,14 @@ local function get_status(name)
 	return is_running(name) and translate("RUNNING") or translate("NOT RUNNING")
 end
 
-uci:foreach(shadowsocks, "servers", function(s)
+uci:foreach(shadowsocksr, "servers", function(s)
 	if s.server and s.server_port then
 		servers[#servers+1] = {name = s[".name"], alias = s.alias or "%s:%s" %{s.server, s.server_port}}
 	end
 end)
 
-m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("General Settings")})
-m.template = "shadowsocks/general"
+m = Map(shadowsocksr, "%s - %s" %{translate("ShadowSocksR"), translate("General Settings")})
+m.template = "shadowsocksr/general"
 
 -- [[ Running Status ]]--
 s = m:section(TypedSection, "general", translate("Running Status"))
@@ -82,7 +82,7 @@ if has_redir then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "main_server", translate("Main Server"))
-	o.template = "shadowsocks/dynamiclist"
+	o.template = "shadowsocksr/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
@@ -116,7 +116,7 @@ if has_local then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "server", translate("Server"))
-	o.template = "shadowsocks/dynamiclist"
+	o.template = "shadowsocksr/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
@@ -139,7 +139,7 @@ if has_tunnel then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "server", translate("Server"))
-	o.template = "shadowsocks/dynamiclist"
+	o.template = "shadowsocksr/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
@@ -183,11 +183,11 @@ o:value("unknown","127.0.0.1:5300")
 -- o.default = "cdns"
 o.rmempty = false
 
-if nixio.fs.access("/usr/share/shadowsocks/gfwlist_dnsmasq.sh") then
+if nixio.fs.access("/usr/share/shadowsocksr/gfwlist_dnsmasq.sh") then
 	o = s:option(Button,"update",translate("Update poisoning list"))
 	o.write = function()
-		luci.sys.call("/usr/share/shadowsocks/gfwlist_dnsmasq.sh >/dev/null 2>&1")
-		luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocks", "general"))
+		luci.sys.call("/usr/share/shadowsocksr/gfwlist_dnsmasq.sh >/dev/null 2>&1")
+		luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocksr", "general"))
 	end
 end
 

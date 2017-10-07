@@ -27,7 +27,7 @@ config servers
 
 config access_control
 	option self_proxy '1'
-	option wan_bp_list '/etc/shadowsocks/china_chnroute.txt'
+	option wan_bp_list '/etc/shadowsocksr/china_chnroute.txt'
 
 config server_subscribe
 	option auto_update '0'

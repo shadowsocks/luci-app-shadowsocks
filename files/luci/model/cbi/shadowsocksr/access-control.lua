@@ -2,7 +2,7 @@
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
-local shadowsocks = "shadowsocks"
+local shadowsocksr = "shadowsocksr"
 local uci = luci.model.uci.cursor()
 local nwm = require("luci.model.network").init()
 local chnroute = uci:get_first("chinadns", "chinadns", "chnroute")
@@ -18,7 +18,7 @@ for _, net in ipairs(nwm:get_networks()) do
 	end
 end
 
-m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Access Control")})
+m = Map(shadowsocksr, "%s - %s" %{translate("ShadowSocksR"), translate("Access Control")})
 
 -- [[ Zone WAN ]]--
 s = m:section(TypedSection, "access_control", translate("Zone WAN"))
@@ -29,7 +29,7 @@ s.anonymous = true
 
 o = s:option(Value, "wan_bp_list", translate("Bypassed IP List"))
 o:value("/dev/null", translate("NULL - As Global Proxy"))
-if nixio.fs.access("/etc/shadowsocks/china_chnroute.txt") then o:value("/etc/shadowsocks/china_chnroute.txt", translate("China CHNRoute")) end
+if nixio.fs.access("/etc/shadowsocksr/china_chnroute.txt") then o:value("/etc/shadowsocksr/china_chnroute.txt", translate("China CHNRoute")) end
 if chnroute then o:value(chnroute, translate("ChinaDNS CHNRoute")) end
 o.datatype = "or(file, '/dev/null')"
 o.default = "/dev/null"

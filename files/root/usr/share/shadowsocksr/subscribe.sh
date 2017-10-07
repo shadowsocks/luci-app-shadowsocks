@@ -21,12 +21,12 @@ CheckIPAddr() {
 }
 
 Server_Update() {
-    local uci_set="uci -q set shadowsocks.@servers[$1]."
+    local uci_set="uci -q set $name.@servers[$1]."
     ${uci_set}alias="[$ssr_group] $ssr_remarks"
     ${uci_set}server="$ssr_host"
     ${uci_set}server_port="$ssr_port"
     ${uci_set}password="$ssr_passwd"
-    uci -q get shadowsocks.@servers[$1].timeout >/dev/null || ${uci_set}timeout="60"
+    uci -q get $name.@servers[$1].timeout >/dev/null || ${uci_set}timeout="60"
     ${uci_set}encrypt_method="$ssr_method"
     ${uci_set}protocol="$ssr_protocol"
     ${uci_set}protocol_param="$ssr_protoparam"
@@ -34,9 +34,11 @@ Server_Update() {
     ${uci_set}obfs_param="$ssr_obfsparam"
 }
 
-subscribe_url=($(uci get shadowsocks.@server_subscribe[0].subscribe_url))
+name=$name
+subscribe_url=($(uci get $name.@server_subscribe[0].subscribe_url))
 [ ${#subscribe_url[@]} -eq 0 ] && exit 1
-[ $(uci -q get shadowsocks.@server_subscribe[0].proxy || echo 0) -eq 0 ] && /etc/init.d/shadowsocks stop >/dev/null 2>&1
+[ $(uci -q get $name.@server_subscribe[0].proxy || echo 0) -eq 0 ] && /etc/init.d/$name stop >/dev/null 2>&1
+log_name=${name}_subscribe
 for ((o=0;o<${#subscribe_url[@]};o++))
 do
     subscribe_data=$(curl -s -L --connect-timeout 3 ${subscribe_url[o]})
@@ -69,11 +71,11 @@ do
             subscribe_o=0
             subscribe_x=""
             temp_host_o=()
-            curr_ssr=$(uci show shadowsocks | grep @servers | grep -c server=)
+            curr_ssr=$(uci show $name | grep @servers | grep -c server=)
             for ((x=0;x<$curr_ssr;x++)) # 循环已有服务器信息，匹配当前订阅群组
             do
-                temp_alias=$(uci -q get shadowsocks.@servers[$x].alias | grep "\[$ssr_group\]")
-                [ -n "$temp_alias" ] && temp_host_o[${#temp_host_o[@]}]=$(uci get shadowsocks.@servers[$x].server)
+                temp_alias=$(uci -q get $name.@servers[$x].alias | grep "\[$ssr_group\]")
+                [ -n "$temp_alias" ] && temp_host_o[${#temp_host_o[@]}]=$(uci get $name.@servers[$x].server)
             done
             for ((x=0;x<$subscribe_max;x++)) # 循环链接
             do
@@ -122,12 +124,12 @@ do
                     [ -z "$ssr_host" ] && continue
                 fi
                 
-                uci_s=$(uci show shadowsocks | grep @servers | grep server= | grep -n -w $ssr_host )
+                uci_s=$(uci show $name | grep @servers | grep server= | grep -n -w $ssr_host )
                 if [ -n "$uci_s" ]; then # 判断当前服务器信息是否存在
                     uci_x=$((${uci_s//:*/} - 1))
                 else
-                    uci_x=$(uci show shadowsocks | grep -c =servers)
-                    uci add shadowsocks servers >/dev/null 2>&1
+                    uci_x=$(uci show $name | grep -c =servers)
+                    uci add $name servers >/dev/null 2>&1
                     subscribe_n=$(($subscribe_n + 1))
                 fi
                 Server_Update $uci_x
@@ -146,19 +148,19 @@ do
             for ((x=0;x<${#temp_host_o[@]};x++))
             do
                 if [ -z "$(echo "$subscribe_x" | grep -w ${temp_host_o[x]})" ]; then
-                    temp_host_x=$(uci show shadowsocks | grep @servers | grep server= | grep -n ${temp_host_o[x]})
-                    uci del shadowsocks.@servers[$((${temp_host_x//:*/}-1))]
+                    temp_host_x=$(uci show $name | grep @servers | grep server= | grep -n ${temp_host_o[x]})
+                    uci del $name.@servers[$((${temp_host_x//:*/}-1))]
                     subscribe_o=$(($subscribe_o + 1))
                 fi
             done
             subscribe_log="$ssr_group 服务器订阅更新成功 服务器数量: ${#ssr_url[@]} 新增服务器: $subscribe_n 删除服务器: $subscribe_o"
-            logger -st shadowsocks_subscribe[$$] -p6 "$subscribe_log"
-            uci commit shadowsocks
+            logger -st $log_name[$$] -p6 "$subscribe_log"
+            uci commit $name
         else
-            logger -st shadowsocks_subscribe[$$] -p3 "${subscribe_url[$o]} 订阅数据解析失败 无法获取 Group"
+            logger -st $log_name[$$] -p3 "${subscribe_url[$o]} 订阅数据解析失败 无法获取 Group"
         fi
     else
-        logger -st shadowsocks_subscribe[$$] -p3 "${subscribe_url[$o]} 订阅数据获取失败 错误代码: $curl_code"
+        logger -st $log_name[$$] -p3 "${subscribe_url[$o]} 订阅数据获取失败 错误代码: $curl_code"
     fi
 done
-/etc/init.d/shadowsocks restart >/dev/null 2>&1
+/etc/init.d/$name restart >/dev/null 2>&1

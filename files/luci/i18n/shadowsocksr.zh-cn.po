@@ -133,7 +133,7 @@ msgstr "服务器管理"
 msgid "Server Port"
 msgstr "服务器端口"
 
-msgid "ShadowSocks"
+msgid "ShadowSocksR"
 msgstr "影梭"
 
 msgid "SOCKS5 Proxy"
