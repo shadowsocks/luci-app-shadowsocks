@@ -179,6 +179,7 @@ start_pdnsd() {
 
 get_dnsmasq_confdir() {
 	local pid=$(pidof dnsmasq)
+	[ $? -ne 0 ] && echo "/tmp/dnsmasq.d"
 	local conf_dir=$(cat /etc/dnsmasq.conf | grep conf-dir= | sed 's/.*=//')
 	local conf_tmp=$(cat /proc/$pid/cmdline | grep dnsmasq.conf)
 	local conf_dir_tmp=$(cat $conf_tmp | grep conf-dir= | sed 's/.*=//')
@@ -189,11 +190,10 @@ get_dnsmasq_confdir() {
 	else
 		echo "/tmp/dnsmasq.d"
 	fi
-
 }
 
 dns_poisoning() {
-	local gfw_list=/etc/shadowsocks/dnsmasq_gfwlist.conf
+	local gfw_list=/etc/shadowsocksr/dnsmasq_gfwlist.conf
 	local gfw_list_tmp=$dnsmasq_confdir/dnsmasq_gfwlist.conf
 	if [ $(uci_get_by_type dns_poisoning enabled) -eq 1 -o $(uci_get_by_type access_control gfw_mode 0) -eq 1 ]; then
 		local method=$(uci_get_by_type dns_poisoning method)
@@ -214,9 +214,15 @@ dns_poisoning() {
 				start_pdnsd
 			;;
 		esac
-		[ ! -f $gfw_list_tmp ] && ln -s $gfw_list $gfw_list_tmp;dnsmasq_restart=1
+		[ ! -f $gfw_list_tmp ] && {
+			ln -s $gfw_list $gfw_list_tmp
+			dnsmasq_restart=1
+		}
 	else
-		[ -f $gfw_list_tmp ] && rm $gfw_list_tmp;dnsmasq_restart=1
+		[ -f $gfw_list_tmp ] && {
+			rm $gfw_list_tmp
+			dnsmasq_restart=1
+		}
 	fi
 	/etc/init.d/dns-forwarder disable
 	/etc/init.d/https_dns_proxy disable
