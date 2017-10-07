@@ -39,8 +39,8 @@ end
 function action_status()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
-		ss_redir = is_running("ssr-redir"),
-		ss_local = is_running("ssr-local"),
-		ss_tunnel = is_running("ssr-tunnel")
+		ssr_redir = is_running("ssr-redir"),
+		ssr_local = is_running("ssr-local"),
+		ssr_tunnel = is_running("ssr-tunnel")
 	})
 end

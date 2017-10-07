@@ -16,7 +16,7 @@ SED_ERES='sed -r'
 
 DNS_IP='127.0.0.1'
 DNS_PORT='5300'
-IPSET_NAME='ss_spec_gfw'
+IPSET_NAME='ssr_spec_gfw'
 OUT_FILE='dnsmasq_gfwlist.conf'
 OUT_FILE_IPSET='dnsmasq_gfwlist_ipset.conf'
 

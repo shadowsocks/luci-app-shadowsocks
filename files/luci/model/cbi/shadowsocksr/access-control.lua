@@ -72,9 +72,9 @@ for name, i18n in pairs(lan_ifaces) do
 end
 
 o = s:option(ListValue, "lan_target", translate("Proxy Type"))
-o:value("SS_SPEC_WAN_AC", translate("Normal"))
+o:value("SSR_SPEC_WAN_AC", translate("Normal"))
 o:value("RETURN", translate("Direct"))
-o:value("SS_SPEC_WAN_FW", translate("Global"))
+o:value("SSR_SPEC_WAN_FW", translate("Global"))
 o.rmempty = false
 
 o = s:option(ListValue, "self_proxy", translate("Self Proxy"))

@@ -34,7 +34,7 @@ Server_Update() {
     ${uci_set}obfs_param="$ssr_obfsparam"
 }
 
-name=$name
+name=shadowsocksr
 subscribe_url=($(uci get $name.@server_subscribe[0].subscribe_url))
 [ ${#subscribe_url[@]} -eq 0 ] && exit 1
 [ $(uci -q get $name.@server_subscribe[0].proxy || echo 0) -eq 0 ] && /etc/init.d/$name stop >/dev/null 2>&1
