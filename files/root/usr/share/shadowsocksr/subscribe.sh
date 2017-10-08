@@ -21,7 +21,7 @@ CheckIPAddr() {
 }
 
 Server_Update() {
-    local uci_set="uci -q set $name.@servers[$1]."
+    local uci_set="uci -q set $name.$1."
     ${uci_set}alias="[$ssr_group] $ssr_remarks"
     ${uci_set}server="$ssr_host"
     ${uci_set}server_port="$ssr_port"
@@ -124,12 +124,9 @@ do
                     [ -z "$ssr_host" ] && continue
                 fi
                 
-                uci_s=$(uci show $name | grep @servers | grep server= | grep -n -w $ssr_host )
-                if [ -n "$uci_s" ]; then # 判断当前服务器信息是否存在
-                    uci_x=$((${uci_s//:*/} - 1))
-                else
-                    uci_x=$(uci show $name | grep -c =servers)
-                    uci add $name servers >/dev/null 2>&1
+                uci_name_tmp=$(uci show $name | grep -w $ssr_host | awk -F . '{print $2}')
+                if [ -z "$uci_name_tmp" ]; then # 判断当前服务器信息是否存在
+                    uci_name_tmp=$(uci add $name servers)
                     subscribe_n=$(($subscribe_n + 1))
                 fi
                 Server_Update $uci_x
@@ -145,11 +142,11 @@ do
                 # echo "混淆参数: $ssr_obfsparam"
                 # echo "备注: $ssr_remarks"
             done
-            for ((x=0;x<${#temp_host_o[@]};x++))
+            for ((x=0;x<${#temp_host_o[@]};x++)) # 新旧服务器信息匹配，如果旧服务器信息不存在于新服务器信息则删除
             do
                 if [ -z "$(echo "$subscribe_x" | grep -w ${temp_host_o[x]})" ]; then
-                    temp_host_x=$(uci show $name | grep @servers | grep server= | grep -n ${temp_host_o[x]})
-                    uci del $name.@servers[$((${temp_host_x//:*/}-1))]
+                    uci_name_tmp=$(uci show $name | grep ${temp_host_o[x]} | awk -F . '{print $2}')
+                    uci delete $name.$uci_name_tmp
                     subscribe_o=$(($subscribe_o + 1))
                 fi
             done
