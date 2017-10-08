@@ -203,6 +203,7 @@ dns_poisoning() {
 			;;
 			dnsforwarder)
 				uci set dns-forwarder.@dns-forwarder[0].enable=1
+				uci commit dns-forwarder
 				/etc/init.d/dns-forwarder start
 			;;
 			https_dns_proxy)
@@ -224,39 +225,16 @@ dns_poisoning() {
 			dnsmasq_restart=1
 		}
 	fi
-	/etc/init.d/dns-forwarder disable
-	/etc/init.d/https_dns_proxy disable
+	ls /etc/rc.d/*dns-forwarder >/dev/null 2>&1
+	[ $? -eq 0 ] && /etc/init.d/dns-forwarder disable
+	ls /etc/rc.d/*https_dns_proxy >/dev/null 2>&1
+	[ $? -eq 0 ] && /etc/init.d/https_dns_proxy disable
 }
 
-gfw_rules() {
-	local gfw_list_ipset=/etc/shadowsocks/dnsmasq_gfwlist_ipset.conf
-	local gfw_list_ipset_tmp=/var/dnsmasq.d/dnsmasq_gfwlist_ipset.conf
-	local domain_blacklist=/etc/shadowsocks/domain_blacklist.conf
-	local domain_blacklist_tmp=/var/dnsmasq.d/domain_blacklist.conf
-	if [ $(uci_get_by_type access_control gfw_mode 0) -eq 1 ]; then
-		local ipset_name=ssr_spec_gfw
-		ipset -! create $ipset_name hash:net hashsize 64
-		idx=$(($(iptables -t nat -L SSR_SPEC_WAN_AC | grep all | sed -n -e '/ss_spec_dst_bp/=') +1))
-		iptables -t nat -I SSR_SPEC_WAN_AC $idx -m set ! --match-set $ipset_name dst -j RETURN
-		iptables -t mangle -I SSR_SPEC_WAN_AC $idx -m set ! --match-set $ipset_name dst -j RETURN
-		local old_md5=$(md5sum $domain_blacklist)
-		uci -q get shadowsocks.@access_control[0].domain_black | sed 's/ /\n/g' | sort -u | sed -r 's#(.+)#server=/\1/127.0.0.1\#5300\
-ipset=/\1/'$ipset_name'#g' > $domain_blacklist
-
-		[ ! -f $gfw_list_ipset_tmp ] && ln -s $gfw_list_ipset $gfw_list_ipset_tmp && dnsmasq_restart=1
-
-		[ ! -f $domain_blacklist_tmp -a -s $domain_blacklist ] && ln -s $domain_blacklist $domain_blacklist_tmp && dnsmasq_restart=1
-		[ -f $domain_blacklist_tmp ] && [ "$(md5sum $domain_blacklist)" != "$old_md5" ] && dnsmasq_restart=1
-		[ -f $domain_blacklist_tmp -a ! -s $domain_blacklist_tmp ] && rm $domain_blacklist_tmp && dnsmasq_restart=1
-	else
-		[ -f $gfw_list_ipset_tmp ] && rm $gfw_list_ipset_tmp && dnsmasq_restart=1
-		[ -f $domain_blacklist_tmp ] && rm $domain_blacklist_tmp && dnsmasq_restart=1
-	fi
-}
-
-subscribe_corn() {
-	[ -n "$(grep -w "/usr/share/shadowsocks/subscribe.sh" /etc/crontabs/root)" ] && sed -i '/\/usr\/share\/shadowsocks\/subscribe.sh/d' /etc/crontabs/root
-	[ $(uci_get_by_type server_subscribe auto_update 0) -eq 1 ] && echo "0 $(uci_get_by_type server_subscribe auto_update_time) * * * /usr/share/shadowsocks/subscribe.sh" >> /etc/crontabs/root
+corn() {
+	[ -n "$(grep -w "/usr/share/shadowsocksr/subscribe.sh" /etc/crontabs/root)" ] && sed -i '/\/usr\/share\/shadowsocksr\/subscribe.sh/d' /etc/crontabs/root
+	[ $(uci_get_by_type server_subscribe auto_update 0) -eq 1 ] && echo "0 $(uci_get_by_type server_subscribe auto_update_time) * * * /usr/share/shadowsocksr/subscribe.sh" >> /etc/crontabs/root
+	[ -z "$(grep -w "/usr/share/shadowsocksr/update_chnroute.sh" /etc/crontabs/root)" ] && echo "0 0 * * 0 /usr/share/shadowsocksr/update_chnroute.sh" >> /etc/crontabs/root
 }
 start() {
 	dnsmasq_confdir=$(get_dnsmasq_confdir)
@@ -266,7 +244,7 @@ start() {
 	ssr_local
 	ssr_tunnel
 	dns_poisoning
-	subscribe_corn
+	corn
 	[ $dnsmasq_restart -eq 1 ] && /etc/init.d/dnsmasq restart >/dev/null 2>&1
 }
 

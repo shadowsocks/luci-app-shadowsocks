@@ -24,6 +24,8 @@ config servers
 	option timeout '60'
 	option password 'barfoo!'
 	option encrypt_method 'rc4-md5'
+	option protocol 'origin'
+	option obfs 'plain'
 
 config access_control
 	option self_proxy '1'

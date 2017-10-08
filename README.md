@@ -17,18 +17,18 @@ OpenWrt LuCI for ShadowsocksR-libev
 可执行文件可通过安装 [ShadowsocksR-libev][openwrt-shadowsocksr] 中提供的 `shadowsocks-libev` 获得.  
 只有当文件存在时, 相应的功能才可被使用, 并显示相应的 LuCI 设置界面.  
 
- 可执行文件  | 可选 | 功能        | TCP协议 | UDP协议 
- ------------|------|-------------|---------|-----------------------------------
- `ss-redir`  | 是   | 透明代理    | 支持    | 需安装 `iptables-mod-tproxy`, `ip`
- `ss-local`  | 是   | SOCKS5 代理 | 支持    | 支持
- `ss-tunnel` | 是   | 端口转发    | 支持    | 支持
+ 可执行文件    | 可选 | 功能        | TCP协议 | UDP协议 
+ -------------|------|------------|---------|-----------------------------------
+ `ssr-redir`  | 是   | 透明代理    | 支持    | 需安装 `iptables-mod-tproxy`, `ip`
+ `ssr-local`  | 是   | SOCKS5 代理 | 支持    | 支持
+ `ssr-tunnel` | 是   | 端口转发    | 支持    | 支持
 
 注: 可执行文件在 `$PATH` 环境变量所表示的搜索路径中, 都可被正确调用.
 
-依赖               | 作用
+可选依赖               | 作用
 -------------------|--------------------
 `dnsmasq-full`     | DNS 域名污染列表解析
-`curl`             | 获取 DNF 域名污染列表和服务器订阅数据
+`curl`             | 获取 DNS 域名污染列表和服务器订阅数据
 `coreutils-base64` | base64 解码 DNS 域名污染列表和服务器订阅数据
 `bash`             | 服务器订阅脚本使用 bash 解释器运行
 
