@@ -129,7 +129,7 @@ do
                     uci_name_tmp=$(uci add $name servers)
                     subscribe_n=$(($subscribe_n + 1))
                 fi
-                Server_Update $uci_x
+                Server_Update $uci_name_tmp
                 subscribe_x=${subscribe_x}$ssr_host" "
 
                 # echo "服务器地址: $ssr_host"
