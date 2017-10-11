@@ -203,6 +203,7 @@ dns_poisoning() {
 			;;
 			dnsforwarder)
 				uci set dns-forwarder.@dns-forwarder[0].enable=1
+				uci set dns-forwarder.@dns-forwarder[0].dns_servers=101.6.6.6
 				uci commit dns-forwarder
 				/etc/init.d/dns-forwarder start
 			;;

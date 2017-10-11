@@ -176,7 +176,7 @@ if nixio.fs.access("/usr/share/dnsmasq/trust-anchors.conf") then
 		o:value("pdnsd", "Pdnsd (OpenDNS)")
 	end
 	if has_bin("dns-forwarder") then
-		o:value("dnsforwarder", "DNS Forwarder (Google DNS)")
+		o:value("dnsforwarder", "DNS Forwarder (TUNA DNS)")
 	end
 	if has_bin("https_dns_proxy") then
 		o:value("https_dns_proxy", "https_dns_proxy (Google DNS)")
