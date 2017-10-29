@@ -22,10 +22,10 @@ config servers
 	option server '127.0.0.1'
 	option server_port '8388'
 	option timeout '60'
-	option password 'barfoo!'
-	option encrypt_method 'rc4-md5'
-	option protocol 'origin'
-	option obfs 'plain'
+	option password 'm'
+	option encrypt_method 'aes-128-ctr'
+	option protocol 'auth_aes128_md5'
+	option obfs 'tls1.2_ticket_auth'
 
 config access_control
 	option self_proxy '1'
