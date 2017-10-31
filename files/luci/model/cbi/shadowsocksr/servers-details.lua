@@ -31,14 +31,14 @@ local encrypt_methods = {
 }
 
 local protocols = {
-	"origin",
-	"auth_sha1",
-	"auth_sha1_v2",	
-	"auth_sha1_v4",
-	"auth_aes128_md5",
-	"auth_aes128_sha1",
-	"auth_chain_a",
-	"auth_chain_b",
+    "origin",
+    "auth_sha1",
+    "auth_sha1_v2",
+    "auth_sha1_v4",
+    "auth_aes128_md5",
+    "auth_aes128_sha1",
+    "auth_chain_a",
+    "auth_chain_b",
     "auth_chain_c",
     "auth_chain_d",
     "auth_chain_e",
@@ -46,10 +46,10 @@ local protocols = {
 }
 
 local obfss = {
-	"plain",
-	"http_simple",
-	"http_post",
-	"tls1.2_ticket_auth",
+    "plain",
+    "http_simple",
+    "http_post",
+    "tls1.2_ticket_auth",
 }
 
 m = Map(shadowsocksr, "%s - %s" %{translate("ShadowSocksR"), translate("Edit Server")})
