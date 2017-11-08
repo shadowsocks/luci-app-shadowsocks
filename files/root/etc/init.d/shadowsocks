@@ -189,6 +189,7 @@ ss_tunnel() {
 }
 
 start() {
+	pidof ss-redir ss-local ss-tunnel >/dev/null && return 0
 	mkdir -p /var/run /var/etc
 	ss_redir && rules
 	ss_local
