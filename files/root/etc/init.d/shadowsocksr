@@ -238,6 +238,7 @@ corn() {
 	[ -z "$(grep -w "/usr/share/shadowsocksr/update_chnroute.sh" /etc/crontabs/root)" ] && echo "0 0 * * 0 /usr/share/shadowsocksr/update_chnroute.sh" >> /etc/crontabs/root
 }
 start() {
+	pidof ssr-redir ssr-local ssr-tunnel >/dev/null && return 0
 	dnsmasq_confdir=$(get_dnsmasq_confdir)
 	dnsmasq_restart=0
 	mkdir -p /var/run /var/etc
