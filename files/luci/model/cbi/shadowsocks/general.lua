@@ -1,4 +1,4 @@
--- Copyright (C) 2014-2017 Jian Chang <aa65535@live.com>
+-- Copyright (C) 2014-2018 Jian Chang <aa65535@live.com>
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
@@ -82,7 +82,6 @@ if has_redir then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "main_server", translate("Main Server"))
-	o.template = "shadowsocks/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
@@ -116,7 +115,6 @@ if has_local then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "server", translate("Server"))
-	o.template = "shadowsocks/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
@@ -139,7 +137,6 @@ if has_tunnel then
 	s.anonymous = true
 
 	o = s:option(DynamicList, "server", translate("Server"))
-	o.template = "shadowsocks/dynamiclist"
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
