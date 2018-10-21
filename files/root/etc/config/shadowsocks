@@ -1,6 +1,6 @@
 
 config general
-	option startup_delay '0'
+	option startup_delay '5'
 
 config transparent_proxy
 	list main_server 'nil'
@@ -27,4 +27,8 @@ config servers
 	option encrypt_method 'rc4-md5'
 
 config access_control
-	option self_proxy '1'
+	option wan_bp_list '/dev/null'
+	list wan_bp_ips '0.0.0.0/1'
+	list wan_bp_ips '128.0.0.0/1'
+	option self_proxy '0'
+	option lan_target 'RETURN'
