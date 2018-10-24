@@ -9,9 +9,7 @@
 usage() {
 	cat <<-EOF
 		Usage: ss-rules [options]
-
 		Valid options are:
-
 		    -s <server_ips>         ip address of shadowsocks remote server
 		    -l <local_port>         port number of shadowsocks local server
 		    -S <server_ips>         ip address of shadowsocks remote UDP server
@@ -20,6 +18,9 @@ usage() {
 		    -b <wan_ips>            wan ip of will be bypassed
 		    -W <ip_list_file>       a file whose content is forwarded ip list
 		    -w <wan_ips>            wan ip of will be forwarded
+		    -G <bool>               wan gfwlist of will be forwarded
+		    -g <wan_hosts>          wan hosts of will be forwarded
+		    -p <dns_server_port>    dns server port of will be ipset
 		    -I <interface>          proxy only for the given interface
 		    -d <target>             the default target of lan access control
 		    -a <lan_hosts>          lan ip of access control, need a prefix to
@@ -71,6 +72,29 @@ ipset_init() {
 		$(for ip in $WAN_FW_IP; do echo "add ss_spec_dst_fw $ip"; done)
 EOF
 	return 0
+}
+
+dnsmasq_ipset() {
+
+	[ $DNS_SERVER_PORT -ne 0 ] || return 1
+	
+	ipset_gfwlist_conf="/tmp/dnsmasq.d/ss-ipset-wan_fw_gfwlist.conf"
+	ipset_host_conf="/tmp/dnsmasq.d/ss-ipset-wan_fw_hosts.conf"
+	rm -f "${ipset_gfwlist_conf}"
+	rm -f "${ipset_host_conf}"
+	
+	[ -e /var/lock/opkg.lock ] || [ -n "`opkg list-installed | grep dnsmasq-full`" ] || return 1
+	
+	for host in $WAN_FW_HOSTS
+	do
+		echo "server=/${host}/127.0.0.1#${DNS_SERVER_PORT}" >> "${ipset_host_conf}"
+		echo "ipset=/${host}/ss_spec_dst_fw" >> "${ipset_host_conf}"
+	done
+	
+	#if [ $WAN_FW_GFWLIST ]
+	#then
+	#	
+	#fi
 }
 
 ipt_nat() {
@@ -184,7 +208,7 @@ gen_prerouting_rules() {
 	done
 }
 
-while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
+while getopts ":s:l:S:L:B:b:W:w:G:g:p:I:d:a:e:oOuUfh" arg; do
 	case "$arg" in
 		s)
 			server=$(for ip in $OPTARG; do echo $ip; done)
@@ -210,6 +234,18 @@ while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
 		w)
 			WAN_FW_IP=$OPTARG
 			;;
+			
+		G)
+			WAN_FW_GFWLIST=$OPTARG
+			;;
+			
+		g)
+			WAN_FW_HOSTS=$OPTARG
+			;;
+		p)
+			DNS_SERVER_PORT=$OPTARG
+			;;
+			
 		I)
 			IFNAMES=$OPTARG
 			;;
@@ -254,7 +290,7 @@ elif [ "$TPROXY" = 2 ]; then
 	: ${LOCAL_PORT:?"You must assign a port for the udp relay server."}
 fi
 
-flush_rules && ipset_init && ipt_nat && ipt_mangle && export_ipt_rules
+flush_rules && ipset_init && dnsmasq_ipset && ipt_nat && ipt_mangle && export_ipt_rules
 RET=$?
 [ "$RET" = 0 ] || loger 3 "Start failed!"
 exit $RET
