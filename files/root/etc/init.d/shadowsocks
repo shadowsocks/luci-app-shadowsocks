@@ -112,7 +112,7 @@ EOF
 start_rules() {
 	config_load $NAME
 	dns_server_port=0
-	if has_valid_server $(uci_get_by_type port_forward server)
+	if [ has_valid_server $(uci_get_by_type port_forward server) ]
 	then
 		dns_server_port=$(uci_get_by_type port_forward local_port)
 	fi
