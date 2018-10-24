@@ -79,6 +79,7 @@ if has_dnsmasq_full and has_ipset then
 	o = s:option(Flag, "wan_fw_gfwlist", translate("Forwarded GFWLIST"))
 	
 	o = s:option(DynamicList, "wan_fw_hosts", translate("Forwarded Hosts"))
+	o.datatype = "hostname"
 	o.placeholder = "eg: example.com"
 	
 end
