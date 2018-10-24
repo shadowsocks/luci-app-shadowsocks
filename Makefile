@@ -79,6 +79,7 @@ define Package/luci-app-shadowsocks/install
 	$(INSTALL_DATA) ./files/luci/view/shadowsocks/*.htm $(1)/usr/lib/lua/luci/view/shadowsocks/
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/root/etc/config/shadowsocks $(1)/etc/config/shadowsocks
+	$(INSTALL_DATA) ./files/root/etc/dnsmasq_ipset_gfwlist.conf $(1)/etc/dnsmasq_ipset_gfwlist.conf
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/root/etc/init.d/shadowsocks $(1)/etc/init.d/shadowsocks
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
