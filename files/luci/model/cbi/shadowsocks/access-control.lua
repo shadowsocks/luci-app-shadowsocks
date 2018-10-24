@@ -9,6 +9,10 @@ local chnroute = uci:get_first("chinadns", "chinadns", "chnroute")
 local lan_ifaces = {}
 local io = require "io"
 
+local function package_is_insalled(name)
+	return luci.sys.call("opkg list-installed | grep %s > /dev/null" ${name}) == 0
+end
+
 local function ipv4_hints(callback)
 	local hosts = {}
 	uci:foreach("dhcp", "dnsmasq", function(s)
