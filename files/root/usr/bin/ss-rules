@@ -78,7 +78,7 @@ EOF
 
 dnsmasq_ipset() {
 
-	[ $DNS_SERVER_PORT -nq 0 ] || return 1
+	[ $DNS_SERVER_PORT -ne 0 ] || return 1
 	
 	ipset_gfwlist_conf="/tmp/dnsmasq.d/ss-ipset-wan_fw_gfwlist.conf"
 	ipset_host_conf="/tmp/dnsmasq.d/ss-ipset-wan_fw_hosts.conf"
