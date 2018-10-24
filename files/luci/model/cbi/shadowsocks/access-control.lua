@@ -70,9 +70,13 @@ o = s:option(DynamicList, "wan_fw_ips", translate("Forwarded IP"))
 o.datatype = "ip4addr"
 o.rmempty = true
 
-if package_is_install('dnsmasq-full') and  package_is_install('ipset') then
+if package_is_installed('dnsmasq-full') and  package_is_installed('ipset') then
+	
+	o = s:option(Flag, "wan_fw_gfwlist", translate("Forwarded GFWLIST"))
+	
 	o = s:option(DynamicList, "wan_fw_hosts", translate("Forwarded Hosts"))
 	o.placeholder = "eg: example.com"
+	
 end
 
 -- [[ Zone LAN ]]--
