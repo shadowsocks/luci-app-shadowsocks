@@ -10,7 +10,7 @@ local lan_ifaces = {}
 local io = require "io"
 
 local function package_is_insalled(name)
-	return luci.sys.call("opkg list-installed | grep %s > /dev/null" ${name}) == 0
+	return luci.sys.call("opkg list-installed | grep ^%s - > /dev/null" ${name}) == 0
 end
 
 local function ipv4_hints(callback)
@@ -69,6 +69,10 @@ o.rmempty = true
 o = s:option(DynamicList, "wan_fw_ips", translate("Forwarded IP"))
 o.datatype = "ip4addr"
 o.rmempty = true
+
+if package_is_install('dnsmasq-full') and  package_is_install('ipset') then
+	o = s:option(DynamicList, "wan_fw_hosts", translate("Forwarded Hosts"))
+end
 
 -- [[ Zone LAN ]]--
 s = m:section(TypedSection, "access_control", translate("Zone LAN"))
