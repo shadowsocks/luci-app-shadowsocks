@@ -78,24 +78,24 @@ EOF
 
 dnsmasq_ipset() {
 
-	ipset_conf="/tmp/dnsmasq.d/ss-ipset.conf"
-	rm -f "${ipset_conf}"
+	ipset_conf_file="/tmp/dnsmasq.d/ss-ipset.conf"
+	rm -f "${ipset_conf_file}"
 	
 	[ $DNS_SERVER_PORT -ne 0 ] || return 1
 	[ -e /var/lock/opkg.lock ] && return 1
 	[ -n "`opkg list-installed | grep dnsmasq-full`" ] || return 1
 	
-	#echo "${WAN_FW_GFWLIST}" >> "${ipset_conf}"
+	#echo "${WAN_FW_GFWLIST}" >> "${ipset_conf_file}"
 	
 	#if [ $WAN_FW_GFWLIST ]
 	#then
-	#	echo "conf-file=/etc/dnsmasq-ipset-gfwlist.conf" >> "${ipset_conf}"
+	#	echo "conf-file=/etc/dnsmasq-ipset-gfwlist.conf" >> "${ipset_conf_file}"
 	#fi
 	
 	for host in $WAN_FW_HOSTS
 	do
-		echo "server=/${host}/127.0.0.1#${DNS_SERVER_PORT}" >> "${ipset_conf}"
-		echo "ipset=/${host}/ss_spec_dst_fw" >> "${ipset_conf}"
+		echo "server=/${host}/127.0.0.1#${DNS_SERVER_PORT}" >> "${ipset_conf_file}"
+		echo "ipset=/${host}/ss_spec_dst_fw" >> "${ipset_conf_file}"
 	done
 	
 }
