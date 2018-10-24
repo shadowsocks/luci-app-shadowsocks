@@ -10,11 +10,11 @@ local lan_ifaces = {}
 local io = require "io"
 
 local function has_dnsmasq_full()
-	return luci.sys.call("opkg list-installed | grep dnsmasq-full > /dev/null") != ""
+	return luci.sys.call("opkg list-installed | grep dnsmasq-full > /dev/null") ~= ""
 end
 
 local function has_ipset()
-	return luci.sys.call("command -v ipset > /dev/null") != ""
+	return luci.sys.call("command -v ipset > /dev/null") ~= ""
 end
 
 local function ipv4_hints(callback)
