@@ -295,7 +295,6 @@ fi
 
 flush_rules && ipset_init && ipt_nat && ipt_mangle && export_ipt_rules
 
-#RET=$?
-#[ "$RET" = 0 ] || loger 3 "Start failed!"
-#exit $RET
-exit
+RET=$?
+[ "$RET" = 0 ] || loger 3 "Start failed!"
+exit $RET
