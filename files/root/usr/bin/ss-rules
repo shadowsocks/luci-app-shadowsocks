@@ -82,7 +82,10 @@ dnsmasq_ipset() {
 	rm -f "${ipset_conf}"
 	
 	[ $DNS_SERVER_PORT -ne 0 ] || return 1
-	[ -e /var/lock/opkg.lock ] || [ -n "`opkg list-installed | grep dnsmasq-full`" ] || return 1
+	[ -e /var/lock/opkg.lock ] && return 1
+	[ -n "`opkg list-installed | grep dnsmasq-full`" ] || return 1
+	
+	echo "${WAN_FW_GFWLIST}" >> "${ipset_conf}"
 	
 	if [ $WAN_FW_GFWLIST ]
 	then
