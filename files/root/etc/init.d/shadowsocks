@@ -127,7 +127,7 @@ start_rules() {
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
 		-G "$(uci_bool_by_name access_control wan_fw_gfwlist)" \
 		-g "$(uci_get_by_type access_control wan_fw_hosts)" \
-		-D "${dns_server_prot}" \
+		-p "${dns_server_prot}" \
 		-I "$(uci_get_by_type access_control lan_ifaces)" \
 		-d "$(uci_get_by_type access_control lan_target)" \
 		-a "$(config_foreach get_lan_hosts lan_hosts)" \
