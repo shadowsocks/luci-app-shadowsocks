@@ -76,7 +76,7 @@ EOF
 	return 0
 }
 
-dnsmasq_ipset(){
+dnsmasq_ipset() {
 
 	[ $DNS_SERVER_PORT -nq 0 ] || return 1
 	
@@ -292,7 +292,7 @@ elif [ "$TPROXY" = 2 ]; then
 	: ${LOCAL_PORT:?"You must assign a port for the udp relay server."}
 fi
 
-flush_rules && ipset_init dnsmasq_ipset && ipt_nat && ipt_mangle && export_ipt_rules
+flush_rules && ipset_init && dnsmasq_ipset && ipt_nat && ipt_mangle && export_ipt_rules
 RET=$?
 [ "$RET" = 0 ] || loger 3 "Start failed!"
 exit $RET
