@@ -210,7 +210,7 @@ gen_prerouting_rules() {
 	done
 }
 
-while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
+while getopts ":s:l:S:L:B:b:W:w:G:g:p:I:d:a:e:oOuUfh" arg; do
 	case "$arg" in
 		s)
 			server=$(for ip in $OPTARG; do echo $ip; done)
