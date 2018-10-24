@@ -93,10 +93,10 @@ dnsmasq_ipset(){
 		echo "ipset=/${host}/ss_spec_dst_fw" >> "${ipset_host_conf}"
 	done
 	
-	if [ $WAN_FW_GFWLIST ]
-	then
-		
-	fi
+	#if [ $WAN_FW_GFWLIST ]
+	#then
+	#	
+	#fi
 }
 
 ipt_nat() {
