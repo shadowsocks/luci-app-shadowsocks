@@ -55,6 +55,12 @@ msgstr "走代理IP列表"
 msgid "Forwarded IP"
 msgstr "强制走代理IP"
 
+msgid "Forwarded GFWLIST"
+msgstr "强制代理GFWLIST"
+
+msgid "Forwarded Hosts"
+msgstr "强制走代理域名"
+
 msgid "Global"
 msgstr "全局代理"
 
