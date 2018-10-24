@@ -72,6 +72,7 @@ o.rmempty = true
 
 if package_is_install('dnsmasq-full') and  package_is_install('ipset') then
 	o = s:option(DynamicList, "wan_fw_hosts", translate("Forwarded Hosts"))
+	o.placeholder = "eg: example.com"
 end
 
 -- [[ Zone LAN ]]--
