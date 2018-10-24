@@ -122,14 +122,16 @@ start_rules() {
 		-d "$(uci_get_by_type access_control lan_target)" \
 		-a "$(config_foreach get_lan_hosts lan_hosts)" \
 		-e "$(uci_get_by_type access_control ipt_ext)" \
+		-G "$(uci_get_by_type access_control wan_fw_gfwlist)" \
+		-g "$(uci_get_by_type access_control wan_fw_hosts)" \
 		$(get_arg_out) $(get_arg_udp)
 }
 
 rules() {
 	pidof ss-redir >/dev/null || return 0
 	start_rules || /usr/bin/ss-rules -f
-	ipset create gfwlist hash:ip > /dev/null
-	iptables -t nat -I SS_SPEC_WAN_AC 1 -m set --match-set gfwlist dst -j SS_SPEC_WAN_FW > /dev/null
+	#ipset create gfwlist hash:ip > /dev/null
+	#iptables -t nat -I SS_SPEC_WAN_AC 1 -m set --match-set gfwlist dst -j SS_SPEC_WAN_FW > /dev/null
 }
 
 start_redir() {
@@ -178,7 +180,7 @@ start_tunnel() {
 	validate_server $1 || return 0
 	ss-tunnel -c $(gen_config_file $1) -u $(get_arg_tnd $1) \
 		-l $(uci_get_by_type port_forward local_port 5300) \
-		-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
+		-L $(uci_get_by_type port_forward destination8.8.4.4:53) \
 		--mtu $(uci_get_by_type port_forward mtu 1492) \
 		-f /var/run/ss-tunnel-$1.pid
 }
