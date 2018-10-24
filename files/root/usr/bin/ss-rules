@@ -87,10 +87,10 @@ dnsmasq_ipset() {
 	
 	echo "${WAN_FW_GFWLIST}" >> "${ipset_conf}"
 	
-	if [ $WAN_FW_GFWLIST ]
-	then
-		echo "conf-file=/etc/dnsmasq-ipset-gfwlist.conf" >> "${ipset_conf}"
-	fi
+	#if [ $WAN_FW_GFWLIST ]
+	#then
+	#	echo "conf-file=/etc/dnsmasq-ipset-gfwlist.conf" >> "${ipset_conf}"
+	#fi
 	
 	for host in $WAN_FW_HOSTS
 	do
