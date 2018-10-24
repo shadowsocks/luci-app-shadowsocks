@@ -123,7 +123,7 @@ start_rules() {
 		-b "$(uci_get_by_type access_control wan_bp_ips)" \
 		-W "$(uci_get_by_type access_control wan_fw_list)" \
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
-		-G "$(uci_bool_by_name access_control wan_fw_gfwlist)" \
+		-G "$(uci_get_by_type access_control wan_fw_gfwlist)" \
 		-g "$(uci_get_by_type access_control wan_fw_hosts)" \
 		-p "${dns_server_port}" \
 		-I "$(uci_get_by_type access_control lan_ifaces)" \
