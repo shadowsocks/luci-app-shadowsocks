@@ -116,7 +116,6 @@ start_rules() {
 	then
 		dns_server_port=$(uci_get_by_type port_forward local_port)
 	fi
-	dns_server_prot = has_valid_server $main_server || return 1
 	/usr/bin/ss-rules \
 		-s "$(config_foreach get_server_ips servers)" \
 		-l "$(uci_get_by_type transparent_proxy local_port 1234)" \
