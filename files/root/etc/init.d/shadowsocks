@@ -111,6 +111,13 @@ EOF
 
 start_rules() {
 	config_load $NAME
+	if has_valid_server $(uci_get_by_type port_forward server)
+	then
+		dns_server_prot=$(uci_get_by_type port_forward local_port)
+	else 
+		dns_server_prot=0
+	fi
+	dns_server_prot = has_valid_server $main_server || return 1
 	/usr/bin/ss-rules \
 		-s "$(config_foreach get_server_ips servers)" \
 		-l "$(uci_get_by_type transparent_proxy local_port 1234)" \
@@ -118,12 +125,13 @@ start_rules() {
 		-b "$(uci_get_by_type access_control wan_bp_ips)" \
 		-W "$(uci_get_by_type access_control wan_fw_list)" \
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
+		-G "$(uci_bool_by_name access_control wan_fw_gfwlist)" \
+		-g "$(uci_get_by_type access_control wan_fw_hosts)" \
+		-D "${dns_server_prot}" \
 		-I "$(uci_get_by_type access_control lan_ifaces)" \
 		-d "$(uci_get_by_type access_control lan_target)" \
 		-a "$(config_foreach get_lan_hosts lan_hosts)" \
 		-e "$(uci_get_by_type access_control ipt_ext)" \
-		-G "$(uci_bool_by_name access_control wan_fw_gfwlist)" \
-		-g "$(uci_get_by_type access_control wan_fw_hosts)" \
 		$(get_arg_out) $(get_arg_udp)
 }
 
