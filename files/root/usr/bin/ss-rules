@@ -22,7 +22,7 @@ usage() {
 		    -w <wan_ips>            wan ip of will be forwarded
 		    -G <bool>               wan gfwlist of will be forwarded
 		    -g <wan_hosts>          wan hosts of will be forwarded
-		    -D <dns_server>         dns server of will be ipset
+		    -p <dns_server_port>    dns server port of will be ipset
 		    -I <interface>          proxy only for the given interface
 		    -d <target>             the default target of lan access control
 		    -a <lan_hosts>          lan ip of access control, need a prefix to
@@ -87,7 +87,7 @@ dnsmasq_ipset(){
 	
 	for host in $WAN_FW_HOSTS
 	do
-		echo "server=/${host}/${DNS_SERVER}" >> "${ipset_host_conf}"
+		echo "server=/${host}/127.0.0.1#${DNS_SERVER_PORT}" >> "${ipset_host_conf}"
 		echo "ipset=/${host}/ss_spec_dst_fw" >> "${ipset_host_conf}"
 	done
 	
@@ -242,8 +242,8 @@ while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
 		g)
 			WAN_FW_HOSTS=$OPTARG
 			;;
-		D)
-			DNS_SERVER=$OPTARG
+		p)
+			DNS_SERVER_PORT=$OPTARG
 			;;
 			
 		I)
