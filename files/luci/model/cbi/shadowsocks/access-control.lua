@@ -9,8 +9,12 @@ local chnroute = uci:get_first("chinadns", "chinadns", "chnroute")
 local lan_ifaces = {}
 local io = require "io"
 
-local function package_is_insalled(name)
-	return luci.sys.call("opkg list-installed | grep ^%s - > /dev/null" ${name}) == 0
+local function has_dnsmasq_full
+	return luci.sys.call("opkg list-installed | grep dnsmasq-full > /dev/null") != ""
+end
+
+local function has_ipset
+	return luci.sys.call("command -v ipset > /dev/null") != ""
 end
 
 local function ipv4_hints(callback)
@@ -70,7 +74,7 @@ o = s:option(DynamicList, "wan_fw_ips", translate("Forwarded IP"))
 o.datatype = "ip4addr"
 o.rmempty = true
 
-if package_is_installed('dnsmasq-full') and  package_is_installed('ipset') then
+if has_dnsmasq_full and has_ipset then
 	
 	o = s:option(Flag, "wan_fw_gfwlist", translate("Forwarded GFWLIST"))
 	
