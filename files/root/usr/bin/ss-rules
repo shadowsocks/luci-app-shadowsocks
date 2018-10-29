@@ -5,7 +5,6 @@
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
 #
-
 usage() {
 	cat <<-EOF
 		Usage: ss-rules [options]
@@ -70,14 +69,20 @@ ipset_init() {
 		$(sed -e "s/^/add ss_spec_dst_fw /" ${WAN_FW_LIST:=/dev/null} 2>/dev/null)
 		$(for ip in $WAN_FW_IP; do echo "add ss_spec_dst_fw $ip"; done)
 EOF
+	ipset create gfwlist hash:ip >/dev/null
 	return 0
 }
 
 ipt_nat() {
 	include_ac_rules nat
 	ipt="iptables -t nat"
+
+	$ipt -I SS_SPEC_WAN_AC 1 -m set --match-set gfwlist dst \
+		-j SS_SPEC_WAN_FW > /dev/null || return 1
+
 	$ipt -A SS_SPEC_WAN_FW -p tcp \
 		-j REDIRECT --to-ports $local_port || return 1
+
 	if [ -n "$OUTPUT" ]; then
 		$ipt -N SS_SPEC_WAN_DG
 		$ipt -A SS_SPEC_WAN_DG -m set --match-set ss_spec_dst_sp dst -j RETURN
@@ -96,6 +101,7 @@ ipt_mangle() {
 	ip rule add fwmark 1 lookup 100
 	ip route add local default dev lo table 100
 	include_ac_rules mangle
+
 	iptables -t mangle -A SS_SPEC_WAN_FW -p udp \
 		-j TPROXY --on-port $LOCAL_PORT --tproxy-mark 0x01/0x01
 	return $?
@@ -175,6 +181,8 @@ include_ac_rules() {
 	$(gen_prerouting_rules $protocol)
 	COMMIT
 EOF
+	
+	
 }
 
 gen_prerouting_rules() {
@@ -184,7 +192,43 @@ gen_prerouting_rules() {
 	done
 }
 
-while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
+NAME=shadowsocks
+validate_server() {
+	[ "$(uci get $NAME.$1 2>/dev/null)" = "servers" ]
+}
+
+has_valid_server() {
+	for server in $@; do
+		validate_server $server && return 0
+	done
+	return 1
+}
+uci_get_by_type() {
+	local ret=$(uci get $NAME.@$1[0].$2 2>/dev/null)
+	echo ${ret:=$3}
+}
+
+dnsmasq_ipset() {
+
+	local dns_server_port=$(uci_get_by_type port_forward local_port 5353)
+	local gfw_hosts=$(uci_get_by_type access_control wan_gfw_hosts)
+	gfw_hosts=$(echo ${gfw_hosts} | tr -d "\r")
+	local config_file=dnsmasq-ss-ipset.conf
+	(
+		echo "# $(date)"
+		for host in ${gfw_hosts}; do
+			[ -n "${host}" ] || continue
+			echo "server=/${host}/127.0.0.1#${dns_server_port}"
+			echo "ipset=/${host}/gfwlist"
+		done
+	) > /tmp/shm/${config_file}
+	mv -i -f /tmp/shm/${config_file} /etc/${config_file}
+	pidof dnsmasq >/dev/null && /etc/init.d/dnsmasq restart >/dev/null
+	
+}
+
+
+while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUpfh" arg; do
 	case "$arg" in
 		s)
 			server=$(for ip in $OPTARG; do echo $ip; done)
@@ -233,6 +277,10 @@ while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
 			;;
 		U)
 			TPROXY=2
+			;;
+		p)
+			dnsmasq_ipset
+			exit 0
 			;;
 		f)
 			flush_rules

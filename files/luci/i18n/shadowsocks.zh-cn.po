@@ -28,6 +28,9 @@ msgstr "连接超时"
 msgid "Destination"
 msgstr "目标地址"
 
+msgid "Destination port"
+msgstr "目标端口"
+
 msgid "Direct"
 msgstr "直接连接"
 
@@ -55,11 +58,12 @@ msgstr "走代理IP列表"
 msgid "Forwarded IP"
 msgstr "强制走代理IP"
 
-msgid "Forwarded GFWLIST"
-msgstr "强制代理GFWLIST"
-
 msgid "Forwarded Hosts"
-msgstr "强制走代理域名"
+msgstr "强制走代理的域名"
+
+msgid "Multi-host fast import, one host per line."
+msgstr "多域名快速导入，每行一个"
+
 
 msgid "Global"
 msgstr "全局代理"
@@ -169,5 +173,14 @@ msgstr "不可用 - iptables-mod-tproxy 或 ip 缺失"
 msgid "Zone LAN"
 msgstr "内网区域"
 
-msgid "Zone WAN"
-msgstr "外网区域"
+msgid "Zone WAN IP"
+msgstr "外网区域-IP"
+
+msgid "Zone WAN Hostname"
+msgstr "外网区域-主机/域名"
+
+msgid "Dependent General Settings -> Port Forward"
+msgstr "需要运行 基本设置->端口转发 才能生效"
+
+msgid "Missing dnsmasq-full, remove 'dnsmasq' package first, and install 'dnsmasq-full' package"
+msgstr "未安装 dnsmasq-full，首先卸载 dnsmasq 然后安装 dnsmasq-full 软件包"

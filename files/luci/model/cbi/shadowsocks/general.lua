@@ -4,6 +4,7 @@
 local m, s, o
 local shadowsocks = "shadowsocks"
 local uci = luci.model.uci.cursor()
+local ipkg = require("luci.model.ipkg")
 local servers = {}
 
 local function has_bin(name)
@@ -136,19 +137,45 @@ if has_tunnel then
 	s = m:section(TypedSection, "port_forward", translate("Port Forward"))
 	s.anonymous = true
 
-	o = s:option(DynamicList, "server", translate("Server"))
-	o:value("nil", translate("Disable"))
-	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
-	o.default = "nil"
-	o.rmempty = false
+	local port_forward_server = s:option(DynamicList, "server", translate("Server"))
+	port_forward_server:value("nil", translate("Disable"))
+	for _, s in ipairs(servers) do port_forward_server:value(s.name, s.alias) end
+	port_forward_server.default = "nil"
+	port_forward_server.rmempty = false
+	
+	local port_forward_port = s:option(Value, "local_port", translate("Local Port"))
+	port_forward_port.datatype = "port"
+	port_forward_port.default = 5353
+	port_forward_port.rmempty = false
 
-	o = s:option(Value, "local_port", translate("Local Port"))
-	o.datatype = "port"
-	o.default = 5300
-	o.rmempty = false
+	if ipkg.installed("dnsmasq-full") and ipkg.installed("ipset") then
+		function port_forward_server.write(self, section, value)
+			luci.sys.call("sed -i '/conf-file=\/etc\/dnsmasq-ss-ipset\.conf/d' /etc/dnsmasq.conf")
+			for k, v in pairs(value) do
+				if uci:get(shadowsocks,v) == "servers" then
+					luci.sys.call("echo conf-file=/etc/dnsmasq-ss-ipset.conf >> /etc/dnsmasq.conf")
+					break
+				end
+			end
+			if luci.sys.exec("pidof dnsmasq") ~= "" then
+				luci.sys.call("/etc/init.d/dnsmasq restart > /dev/null 2>&1 &")
+			end
+			DynamicList.write(self, section, value)
+		end
+		function port_forward_port.write(self, section, value)
+			Value.write(self, section, value)
+			luci.sys.call("ss-rules -p > /dev/null  2>&1 &")
+		end
+	end
 
 	o = s:option(Value, "destination", translate("Destination"))
-	o.default = "8.8.4.4:53"
+	o.datatype="ipaddr"
+	o.default = "8.8.4.4"
+	o.rmempty = false
+
+	o = s:option(Value, "destination_port", translate("Destination port"))
+	o.datatype="port"
+	o.default = "53"
 	o.rmempty = false
 
 	o = s:option(Value, "mtu", translate("Override MTU"))

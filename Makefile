@@ -74,14 +74,17 @@ define Package/luci-app-shadowsocks/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DATA) ./files/luci/controller/*.lua $(1)/usr/lib/lua/luci/controller/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/shadowsocks
-	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocks/*.lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocks/
+	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocks/general.lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocks/general.lua
+	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocks/servers.lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocks/servers.lua
+	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocks/servers-details.lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocks/servers-details.lua
+	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocks/access-control$(2).lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocks/access-control.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/shadowsocks
 	$(INSTALL_DATA) ./files/luci/view/shadowsocks/*.htm $(1)/usr/lib/lua/luci/view/shadowsocks/
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/root/etc/config/shadowsocks $(1)/etc/config/shadowsocks
-	$(INSTALL_DATA) ./files/root/etc/dnsmasq_ipset_gfwlist.conf $(1)/etc/dnsmasq_ipset_gfwlist.conf
+	$(INSTALL_DATA) ./files/root/etc/dnsmasq-ss-ipset.conf $(1)/etc/dnsmasq-ss-ipset.conf
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/root/etc/init.d/shadowsocks $(1)/etc/init.d/shadowsocks
+	$(INSTALL_BIN) ./files/root/etc/init.d/shadowsocks$(2) $(1)/etc/init.d/shadowsocks
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/root/etc/uci-defaults/luci-shadowsocks $(1)/etc/uci-defaults/luci-shadowsocks
 	$(INSTALL_DIR) $(1)/usr/bin

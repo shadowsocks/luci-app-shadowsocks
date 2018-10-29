@@ -109,21 +109,6 @@ EOF
 	echo $config_file
 }
 
-dnsmasq_ipset() {
-
-	pidof ss-tunnel >/dev/null || return 1
-	[ -e /var/lock/opkg.lock ] && return 0
-	[ "`opkg list-installed | grep dnsmasq-full`" ] || return 1
-	/usr/bin/ss-rules -p >/dev/null 2>&1 &
-	return 0
-
-}
-
-stop_dnsmasq_ipset() {
-	[ -e /var/lock/opkg.lock ] && return 0
-	[ "`opkg list-installed | grep dnsmasq-full`" ] || return 1
-	pidof dnsmasq >/dev/null && [ -x /etc/init.d/dnsmasq ] && /etc/init.d/dnsmasq restart >/dev/null
-}
 
 start_rules() {
 	config_load $NAME
@@ -144,9 +129,8 @@ start_rules() {
 
 
 rules() {
-	pidof ss-redir >/dev/null || return 1
-	start_rules && return 0
-	/usr/bin/ss-rules -f
+	pidof ss-redir >/dev/null || return 0
+	start_rules || /usr/bin/ss-rules -f
 }
 
 start_redir() {
@@ -195,7 +179,7 @@ start_tunnel() {
 	validate_server $1 || return 0
 	ss-tunnel -c $(gen_config_file $1) -u $(get_arg_tnd $1) \
 		-l $(uci_get_by_type port_forward local_port 5300) \
-		-L $(uci_get_by_type port_forward destination 8.8.4.4):$(uci_get_by_type port_forward destination_port 53) \
+		-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
 		--mtu $(uci_get_by_type port_forward mtu 1492) \
 		-f /var/run/ss-tunnel-$1.pid
 }
@@ -208,13 +192,13 @@ ss_tunnel() {
 }
 
 start() {
+
 	pidof ss-redir ss-local ss-tunnel >/dev/null && return 0
 	mkdir -p /var/run /var/etc
 	ss_tunnel
 	ss_local
-	ss_redir && rules && return 0
-	# && dnsmasq_ipset
-	#stop_dnsmasq_ipset
+	ss_redir && rules
+	
 }
 
 boot() {

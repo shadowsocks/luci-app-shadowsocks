@@ -4,7 +4,6 @@
 local m, s, o
 local shadowsocks = "shadowsocks"
 local uci = luci.model.uci.cursor()
-local ipkg = require("luci.model.ipkg")
 local nwm = require("luci.model.network").init()
 local chnroute = uci:get_first("chinadns", "chinadns", "chnroute")
 local lan_ifaces = {}
@@ -44,8 +43,8 @@ end
 
 m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Access Control")})
 
--- [[ Zone WAN IP ]]--
-s = m:section(TypedSection, "access_control", translate("Zone WAN IP"))
+-- [[ Zone WAN ]]--
+s = m:section(TypedSection, "access_control", translate("Zone WAN"))
 s.anonymous = true
 
 o = s:option(Value, "wan_bp_list", translate("Bypassed IP List"))
@@ -66,31 +65,6 @@ o.rmempty = true
 o = s:option(DynamicList, "wan_fw_ips", translate("Forwarded IP"))
 o.datatype = "ip4addr"
 o.rmempty = true
-
--- [[ Zone WAN Hosts ]]--
-
-
-if ipkg.installed("dnsmasq-full") then
-
-	s = m:section(TypedSection, "access_control", translate("Zone WAN Hostname"), translate("Dependent General Settings -> Port Forward"))
-	s.anonymous = true
-	
-	local wan_gfw_hosts = s:option(TextValue, "wan_gfw_hosts", translate("Forwarded Hosts"), translate("Multi-host fast import, one host per line."))
-	wan_gfw_hosts.datatype = "list(hostname)"
-	wan_gfw_hosts.rows = 10
-	wan_gfw_hosts.placeholder = "host eg: example.com"
-
-	function wan_gfw_hosts.write(self, section, value)
-		TextValue.write(self, section, value)
-		luci.sys.call("ss-rules -p > /dev/null  2>&1 &")
-	end
-
-else
-
-	s = m:section(TypedSection, "access_control", translate("Zone WAN")..-"Hostname", translate("Missing dnsmasq-full, remove 'dnsmasq' package first, and install 'dnsmasq-full' package"))
-	s.anonymous = true
-
-end
 
 -- [[ Zone LAN ]]--
 s = m:section(TypedSection, "access_control", translate("Zone LAN"))
