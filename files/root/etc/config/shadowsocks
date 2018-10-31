@@ -13,8 +13,9 @@ config socks5_proxy
 
 config port_forward
 	list server 'nil'
-	option local_port '5300'
-	option destination '8.8.4.4:53'
+	option local_port '5353'
+	option destination '8.8.8.8'
+	option destination_port '53'
 
 config servers
 	option alias 'sample'
@@ -32,6 +33,3 @@ config access_control
 	list wan_bp_ips '128.0.0.0/1'
 	option self_proxy '0'
 	option lan_target 'RETURN'
-	option wan_fw_gfwlist '1'
-	list wan_fw_hosts 'google.com'
-	list wan_fw_hosts 'facebook.com'

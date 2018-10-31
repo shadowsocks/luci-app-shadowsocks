@@ -170,7 +170,7 @@ if has_tunnel then
 
 	o = s:option(Value, "destination", translate("Destination"))
 	o.datatype="ipaddr"
-	o.default = "8.8.4.4"
+	o.default = "8.8.8.8"
 	o.rmempty = false
 
 	o = s:option(Value, "destination_port", translate("Destination port"))

@@ -182,5 +182,5 @@ msgstr "外网区域-主机/域名"
 msgid "Dependent General Settings -> Port Forward"
 msgstr "需要运行 基本设置->端口转发 才能生效"
 
-msgid "Missing dnsmasq-full, remove 'dnsmasq' package first, and install 'dnsmasq-full' package"
-msgstr "未安装 dnsmasq-full，首先卸载 dnsmasq 然后安装 dnsmasq-full 软件包"
+msgid "Missing dnsmasq-full"
+msgstr "未安装 dnsmasq-full"
