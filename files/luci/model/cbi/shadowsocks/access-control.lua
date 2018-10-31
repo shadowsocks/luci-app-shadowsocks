@@ -87,7 +87,7 @@ if ipkg.installed("dnsmasq-full") then
 
 else
 
-	s = m:section(TypedSection, "access_control", translate("Zone WAN")..-"Hostname", translate("Missing dnsmasq-full, remove 'dnsmasq' package first, and install 'dnsmasq-full' package"))
+	s = m:section(TypedSection, "access_control", translate("Zone WAN")..-"Hostname", translate("Missing dnsmasq-full"))
 	s.anonymous = true
 
 end
