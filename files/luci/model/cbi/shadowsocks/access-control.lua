@@ -71,7 +71,6 @@ o.rmempty = true
 
 
 if ipkg.installed("dnsmasq-full") then
-
 	s = m:section(TypedSection, "access_control", translate("Zone WAN Hostname"), translate("Dependent General Settings -> Port Forward"))
 	s.anonymous = true
 	
@@ -84,12 +83,9 @@ if ipkg.installed("dnsmasq-full") then
 		TextValue.write(self, section, value)
 		luci.sys.call("ss-rules -p > /dev/null  2>&1 &")
 	end
-
 else
-
 	s = m:section(TypedSection, "access_control", translate("Zone WAN")..-"Hostname", translate("Missing dnsmasq-full"))
 	s.anonymous = true
-
 end
 
 -- [[ Zone LAN ]]--

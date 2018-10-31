@@ -183,4 +183,8 @@ msgid "Dependent General Settings -> Port Forward"
 msgstr "需要运行 基本设置->端口转发 才能生效"
 
 msgid "Missing dnsmasq-full"
+<<<<<<< HEAD
 msgstr "未安装 dnsmasq-full"
+=======
+msgstr "未安装 dnsmasq-full"
+>>>>>>> 1d311a5fc31efd0cfcb7705acc76b9df0b842841
