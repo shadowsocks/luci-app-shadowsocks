@@ -34,7 +34,7 @@ stringify() {
                 "$ba"|"$qt") ret="$ret\\$ch";;
                 *)
                     digit="$(printf '%d' "'$ch")"
-                    if [[ "$digit" -lt 32 ]] || [[ "$digit" -ge 127 ]] && [[ "$digit" -le 255 ]]; then
+                    if [[ "$digit" -ge 0 ]] && [[ "$digit" -lt 32 ]]; then
                         ret="$ret$(printf '\\u%04x' "'$ch")"
                     else
                         ret="$ret$ch"
