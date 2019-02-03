@@ -12,6 +12,40 @@ STOP=15
 NAME=shadowsocks
 EXTRA_COMMANDS=rules
 
+stringify() {
+    local tab=$'\t'
+    local lf=$'\n'
+    local cr=$'\r'
+    local ba="\\"
+    local qt='"'
+
+    local ret='"'
+    local i=-1
+    local ch digit
+    if [[ -n "$1" ]]; then
+        while true; do
+            i=$((i+1))
+            ch="${1:$i:1}"
+            if [[ -z "$ch" ]]; then break; fi
+            case "$ch" in
+                "$tab") ret="$ret\\t";;
+                "$lf") ret="$ret\\n";;
+                "$cr") ret="$ret\\r";;
+                "$ba"|"$qt") ret="$ret\\$ch";;
+                *)
+                    digit="$(printf '%d' "'$ch")"
+                    if [[ "$digit" -lt 32 ]] || [[ "$digit" -ge 127 ]] && [[ "$digit" -le 255 ]]; then
+                        ret="$ret$(printf '\\u%04x' "'$ch")"
+                    else
+                        ret="$ret$ch"
+                    fi
+                ;;
+            esac
+        done
+    fi
+    echo "$ret\""
+}
+
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
 	echo ${ret:=$3}
@@ -73,10 +107,10 @@ get_plugin_config() {
 	local plugin=$(uci_get_by_name $1 plugin)
 	local plugin_opts=$(uci_get_by_name $1 plugin_opts)
 	if [ -n "$plugin" ]; then
-		echo $plugin >>/var/run/ss-plugin
-		echo -e  "\n    \"plugin\": \"$plugin\","
+		echo "$plugin" >>/var/run/ss-plugin
+		echo -e  "\n    \"plugin\": $(stringify "$plugin"),"
 		if [ -n "$plugin_opts" ]; then
-			echo "    \"plugin_opts\": \"$plugin_opts\","
+			echo "    \"plugin_opts\": $(stringify "$plugin_opts"),"
 		fi
 	fi
 }
@@ -85,9 +119,9 @@ get_crypto_config() {
 	local key=$(uci_get_by_name $1 key)
 	local password=$(uci_get_by_name $1 password)
 	if [ -n "$key" ]; then
-		echo "\"key\": \"$key\","
+		echo "\"key\": $(stringify "$key"),"
 	elif [ -n "$password" ]; then
-		echo "\"password\": \"$password\","
+		echo "\"password\": $(stringify "$password"),"
 	else
 		logger -st $NAME -p3 "The password or key is not set."
 	fi
@@ -97,10 +131,10 @@ gen_config_file() {
 	local config_file=/var/etc/$NAME.$1.json
 	cat <<-EOF >$config_file
 		{
-		    "server": "$(uci_get_by_name $1 server)",
+		    "server": $(stringify "$(uci_get_by_name $1 server)"),
 		    "server_port": $(uci_get_by_name $1 server_port),
 		    $(get_crypto_config $1)
-		    "method": "$(uci_get_by_name $1 encrypt_method)",
+		    "method": $(stringify "$(uci_get_by_name $1 encrypt_method)"),
 		    "local_address": "0.0.0.0",$(get_plugin_config $1)
 		    "timeout": $(uci_get_by_name $1 timeout 60),
 		    "reuse_port": true
@@ -143,7 +177,7 @@ ss_redir() {
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
 	has_valid_server $main_server || return 1
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
-	if [ "$udp_relay_server" = "same" ]; then
+	if [ "$udp_relay_server" == "same" ]; then
 		for server in $main_server; do
 			start_redir $server -u
 		done
