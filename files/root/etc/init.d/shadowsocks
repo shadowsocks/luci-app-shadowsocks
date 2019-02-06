@@ -19,7 +19,7 @@ stringify() {
     local ba="\\"
     local qt='"'
 
-    local ret='"'
+    local ret=
     local i=-1
     local ch digit
     if [[ -n "$1" ]]; then
@@ -43,7 +43,9 @@ stringify() {
             esac
         done
     fi
-    echo "$ret\""
+    cat<<EOF
+"$ret"
+EOF
 }
 
 uci_get_by_name() {
