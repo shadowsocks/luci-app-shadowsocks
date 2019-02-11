@@ -43,9 +43,7 @@ stringify() {
             esac
         done
     fi
-    cat<<EOF
-"$ret"
-EOF
+    printf '"%s"\n' "$ret"
 }
 
 uci_get_by_name() {
