@@ -103,6 +103,7 @@ gen_config_file() {
 		    "method": "$(uci_get_by_name $1 encrypt_method)",
 		    "local_address": "0.0.0.0",$(get_plugin_config $1)
 		    "timeout": $(uci_get_by_name $1 timeout 60),
+		    "nofile": 65535,
 		    "reuse_port": true
 		}
 EOF
