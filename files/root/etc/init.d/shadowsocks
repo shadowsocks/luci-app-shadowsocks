@@ -1,3 +1,4 @@
+
 #!/bin/sh /etc/rc.common
 #
 # Copyright (C) 2014-2017 Jian Chang <aa65535@live.com>
@@ -145,16 +146,32 @@ ss_redir() {
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
 	if [ "$udp_relay_server" = "same" ]; then
 		for server in $main_server; do
-			start_redir $server -u
+			if [ "$(uci_get_by_name $server v2ray)" = "1" ]; then
+				start_v2ray $(uci_get_by_name $server v2ray_config)
+			else
+				start_redir $server -u
+			fi
 		done
 	else
 		for server in $main_server; do
-			start_redir $server
+			if [ "$(uci_get_by_name $server v2ray)" = "1" ]; then
+				start_v2ray $(uci_get_by_name $server v2ray_config)
+			else
+				start_redir $server
+			fi
 		done
 		for server in $udp_relay_server; do
-			start_redir $server -U -udp
+			if [ "$(uci_get_by_name $server v2ray)" = "1" ]; then
+				start_v2ray $(uci_get_by_name $server v2ray_config)
+			else
+				start_redir $server -U -udp
+			fi
 		done
 	fi
+}
+
+start_v2ray() {
+	/usr/bin/v2ray/v2ray -config $1 >/dev/null 2>&1 &
 }
 
 start_local() {
@@ -189,7 +206,7 @@ ss_tunnel() {
 }
 
 start() {
-	pidof ss-redir ss-local ss-tunnel >/dev/null && return 0
+	pidof ss-redir ss-local ss-tunnel v2ray >/dev/null && return 0
 	mkdir -p /var/run /var/etc
 	ss_redir && rules
 	ss_local
@@ -208,7 +225,7 @@ kill_all() {
 
 stop() {
 	/usr/bin/ss-rules -f
-	kill_all ss-redir ss-local ss-tunnel
+	kill_all ss-redir ss-local ss-tunnel v2ray
 	if [ -f /var/run/ss-plugin ]; then
 		kill_all $(sort -u /var/run/ss-plugin)
 		rm -f /var/run/ss-plugin

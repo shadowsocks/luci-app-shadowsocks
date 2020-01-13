@@ -78,4 +78,12 @@ o.placeholder = "eg: obfs-local"
 o = s:option(Value, "plugin_opts", translate("Plugin Arguments"))
 o.placeholder = "eg: obfs=http;obfs-host=www.bing.com"
 
+o = s:option(Flag, "v2ray", translate("V2Ray"))
+o.rmempty = false
+
+o = s:option(Value, "v2ray_config", translate("V2ray Config"))
+o.datatype = "or(file, '/dev/null')"
+o.default = "/etc/v2ray/config.json"
+o.rmempty = true
+
 return m
