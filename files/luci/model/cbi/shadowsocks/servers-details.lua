@@ -99,13 +99,13 @@ o.placeholder = "eg: obfs=http;obfs-host=www.bing.com"
 o:depends("v2ray","0")
 o:depends("v2ray","")
 
-o = s:option(Value, "v2ray_path", translate("V2ray Path(optional)"))
+o = s:option(Value, "v2ray_path", translate("V2Ray Path(optional)"))
 o.datatype = "or(file, '/dev/null')"
 o.placeholder = "eg: /usr/bin/v2ray/v2ray"
 o:depends("v2ray","1")
 o.rmempty = true
 
-o = s:option(Value, "v2ray_config", translate("V2ray Config"))
+o = s:option(Value, "v2ray_config", translate("V2Ray Config"))
 o.datatype = "or(file, '/dev/null')"
 o.placeholder = "eg: /etc/v2ray/config.json"
 o:depends("v2ray","1")
