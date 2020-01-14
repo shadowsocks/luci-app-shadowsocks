@@ -44,11 +44,18 @@ s.addremove = false
 o = s:option(Value, "alias", translate("Alias(optional)"))
 o.rmempty = true
 
+o = s:option(Flag, "v2ray", translate("V2Ray"))
+o.rmempty = true
+
 o = s:option(Flag, "fast_open", translate("TCP Fast Open"))
 o.rmempty = false
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Flag, "no_delay", translate("TCP no-delay"))
 o.rmempty = false
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Value, "server", translate("Server Address"))
 o.datatype = "ipaddr"
@@ -57,38 +64,51 @@ o.rmempty = false
 o = s:option(Value, "server_port", translate("Server Port"))
 o.datatype = "port"
 o.rmempty = false
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Value, "timeout", translate("Connection Timeout"))
 o.datatype = "uinteger"
 o.default = 60
 o.rmempty = false
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Value, "password", translate("Password"))
 o.password = true
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Value, "key", translate("Directly Key"))
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods) do o:value(v, v:upper()) end
 o.rmempty = false
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Value, "plugin", translate("Plugin Name"))
 o.placeholder = "eg: obfs-local"
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Value, "plugin_opts", translate("Plugin Arguments"))
 o.placeholder = "eg: obfs=http;obfs-host=www.bing.com"
-
-o = s:option(Flag, "v2ray", translate("V2Ray"))
-o.rmempty = false
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Value, "v2ray_path", translate("V2ray Path"))
 o.datatype = "or(file, '/dev/null')"
-o.default = "/usr/bin/v2ray/v2ray"
+o.placeholder = "eg: /usr/bin/v2ray/v2ray"
+o:depends("v2ray","1")
 o.rmempty = true
 
 o = s:option(Value, "v2ray_config", translate("V2ray Config"))
 o.datatype = "or(file, '/dev/null')"
-o.default = "/etc/v2ray/config.json"
+o.placeholder = "eg: /etc/v2ray/config.json"
+o:depends("v2ray","1")
 o.rmempty = true
 
 return m
