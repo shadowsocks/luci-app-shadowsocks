@@ -34,7 +34,7 @@ local function get_status(name)
 end
 
 uci:foreach(shadowsocks, "servers", function(s)
-	if s.server and s.server_port then
+	if s.v2ray or s.server and s.server_port then
 		servers[#servers+1] = {name = s[".name"], alias = s.alias or "%s:%s" %{s.server, s.server_port}}
 	end
 end)

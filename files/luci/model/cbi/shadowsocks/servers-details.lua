@@ -64,6 +64,8 @@ o.rmempty = false
 o = s:option(Value, "server_port", translate("Server Port"))
 o.datatype = "port"
 o.rmempty = false
+o:depends("v2ray","0")
+o:depends("v2ray","")
 
 o = s:option(Value, "timeout", translate("Connection Timeout"))
 o.datatype = "uinteger"
