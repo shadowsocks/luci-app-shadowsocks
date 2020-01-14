@@ -99,7 +99,7 @@ o.placeholder = "eg: obfs=http;obfs-host=www.bing.com"
 o:depends("v2ray","0")
 o:depends("v2ray","")
 
-o = s:option(Value, "v2ray_path", translate("V2ray Path"))
+o = s:option(Value, "v2ray_path", translate("V2ray Path(optional)"))
 o.datatype = "or(file, '/dev/null')"
 o.placeholder = "eg: /usr/bin/v2ray/v2ray"
 o:depends("v2ray","1")
