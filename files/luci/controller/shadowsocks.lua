@@ -8,28 +8,38 @@ function index()
 		return
 	end
 
-	entry({"admin", "services", "shadowsocks"},
+	page = entry({"admin", "services", "shadowsocks"},
 		alias("admin", "services", "shadowsocks", "general"),
-		_("ShadowSocks"), 10).dependent = true
+		_("ShadowSocks"), 10)
+	page.dependent = true
+	page.acl_depends = { "luci-app-shadowsocks" }
 
-	entry({"admin", "services", "shadowsocks", "general"},
+	page = entry({"admin", "services", "shadowsocks", "general"},
 		cbi("shadowsocks/general"),
-		_("General Settings"), 10).leaf = true
+		_("General Settings"), 10)
+	page.leaf = true
+	page.acl_depends = { "luci-app-shadowsocks" }
 
-	entry({"admin", "services", "shadowsocks", "status"},
-		call("action_status")).leaf = true
+	page = entry({"admin", "services", "shadowsocks", "status"},
+		call("action_status"))
+	page.leaf = true
+	page.acl_depends = { "luci-app-shadowsocks" }
 
-	entry({"admin", "services", "shadowsocks", "servers"},
+	page = entry({"admin", "services", "shadowsocks", "servers"},
 		arcombine(cbi("shadowsocks/servers"), cbi("shadowsocks/servers-details")),
-		_("Servers Manage"), 20).leaf = true
+		_("Servers Manage"), 20)
+	page.leaf = true
+	page.acl_depends = { "luci-app-shadowsocks" }
 
 	if luci.sys.call("command -v ss-redir >/dev/null") ~= 0 then
 		return
 	end
 
-	entry({"admin", "services", "shadowsocks", "access-control"},
+	page = entry({"admin", "services", "shadowsocks", "access-control"},
 		cbi("shadowsocks/access-control"),
-		_("Access Control"), 30).leaf = true
+		_("Access Control"), 30)
+	page.leaf = true
+	page.acl_depends = { "luci-app-shadowsocks" }
 end
 
 local function is_running(name)
