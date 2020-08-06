@@ -1,0 +1,11 @@
+{
+	"luci-app-shadowsocks": {
+		"description": "Grant access to LuCI Shadowsocks",
+		"read": {
+			"uci": [ "shadowsocks" ]
+		},
+		"write": {
+			"uci": [ "shadowsocks" ]
+		}
+	}
+}
