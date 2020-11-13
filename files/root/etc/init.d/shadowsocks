@@ -10,7 +10,7 @@ START=90
 STOP=15
 
 NAME=shadowsocks
-EXTRA_COMMANDS=rules
+extra_command "rules"
 
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
