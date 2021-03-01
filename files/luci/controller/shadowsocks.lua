@@ -39,7 +39,7 @@ end
 function action_status()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
-		ss_redir = is_running("ss-redir"),
+		ss_redir = (is_running("ss-redir") or is_running("v2ray")),
 		ss_local = is_running("ss-local"),
 		ss_tunnel = is_running("ss-tunnel")
 	})

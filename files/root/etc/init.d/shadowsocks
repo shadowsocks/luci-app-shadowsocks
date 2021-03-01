@@ -126,7 +126,7 @@ start_rules() {
 }
 
 rules() {
-	pidof ss-redir >/dev/null || return 0
+	pidof ss-redir >/dev/null || pidof v2ray >/dev/null || return 0
 	start_rules || /usr/bin/ss-rules -f
 }
 
