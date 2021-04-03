@@ -1,0 +1,23 @@
+<%#
+ Copyright (C) 2021 Jian Chang <aa65535@live.com>
+ Licensed to the public under the GNU General Public License v3.
+-%>
+
+<%+cbi/valueheader%>
+<script type="text/javascript">//<![CDATA[
+	function subscribe(btn, section) {
+		btn.disabled = true;
+		btn.value = "<%:Updating...%>";
+		XHR.get('<%=luci.dispatcher.build_url("admin", "services", "shadowsocks","subscribe")%>', { section }, function(x, resp) {
+			if (resp.code) {
+				btn.value = "<%:Update Failed%>";
+				alert("<%:Update failed, need to save first%>")
+			} else {
+				btn.value = "<%:Update Completed%>";
+			}
+		});
+		return false;
+	}
+//]]></script>
+<input type="button" class="cbi-button cbi-input-apply" value="<%:Update Now%>" onclick="return subscribe(this,'<%=section%>')" />
+<%+cbi/valuefooter%>

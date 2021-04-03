@@ -1,26 +1,27 @@
--- Copyright (C) 2014-2018 Jian Chang <aa65535@live.com>
+-- Copyright (C) 2014-2021 Jian Chang <aa65535@live.com>
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
 local shadowsocks = "shadowsocks"
 local uci = luci.model.uci.cursor()
 local servers = {}
+local cores = tonumber(luci.sys.exec("grep 'processor' /proc/cpuinfo | wc -l"))
 
 local function has_bin(name)
 	return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
 end
 
-local function has_ss_bin()
-	return has_bin("ss-redir"), has_bin("ss-local"), has_bin("ss-tunnel")
+local function has_bins()
+	return has_bin("ss-redir"), has_bin("ssr-redir"), has_bin("ss-local"), has_bin("ssr-local"), has_bin("ss-tunnel"), has_bin("ssr-tunnel")
 end
 
 local function has_udp_relay()
 	return luci.sys.call("lsmod | grep -q TPROXY && command -v ip >/dev/null") == 0
 end
 
-local has_redir, has_local, has_tunnel = has_ss_bin()
+local has_ss_redir, has_ssr_redir, has_ss_local, has_ssr_local, has_ss_tunnel, has_ssr_tunnel = has_bins()
 
-if not has_redir and not has_local and not has_tunnel then
+if not has_ss_redir and not has_ssr_redir and not has_ss_local and not has_ssr_local and not has_ss_tunnel and not has_ssr_tunnel then
 	return Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"),
 		translate("General Settings")}, '<b style="color:red">shadowsocks-libev binary file not found.</b>')
 end
@@ -30,7 +31,7 @@ local function is_running(name)
 end
 
 local function get_status(name)
-	return is_running(name) and translate("RUNNING") or translate("NOT RUNNING")
+	return (is_running(name %{"ss"}) or is_running(name %{"ssr"})) and translate("RUNNING") or translate("NOT RUNNING")
 end
 
 uci:foreach(shadowsocks, "servers", function(s)
@@ -46,21 +47,21 @@ m.template = "shadowsocks/general"
 s = m:section(TypedSection, "general", translate("Running Status"))
 s.anonymous = true
 
-if has_redir then
+if has_ss_redir or has_ssr_redir then
 	o = s:option(DummyValue, "_redir_status", translate("Transparent Proxy"))
-	o.value = "<span id=\"_redir_status\">%s</span>" %{get_status("ss-redir")}
+	o.value = "<span id=\"_redir_status\">%s</span>" %{get_status("%s-redir")}
 	o.rawhtml = true
 end
 
-if has_local then
+if has_ss_local or has_ssr_local then
 	o = s:option(DummyValue, "_local_status", translate("SOCKS5 Proxy"))
-	o.value = "<span id=\"_local_status\">%s</span>" %{get_status("ss-local")}
+	o.value = "<span id=\"_local_status\">%s</span>" %{get_status("%s-local")}
 	o.rawhtml = true
 end
 
-if has_tunnel then
+if has_ss_tunnel or has_ssr_tunnel then
 	o = s:option(DummyValue, "_tunnel_status", translate("Port Forward"))
-	o.value = "<span id=\"_tunnel_status\">%s</span>" %{get_status("ss-tunnel")}
+	o.value = "<span id=\"_tunnel_status\">%s</span>" %{get_status("%s-tunnel")}
 	o.rawhtml = true
 end
 
@@ -77,11 +78,11 @@ o.default = 0
 o.rmempty = false
 
 -- [[ Transparent Proxy ]]--
-if has_redir then
+if has_ss_redir or has_ssr_redir then
 	s = m:section(TypedSection, "transparent_proxy", translate("Transparent Proxy"))
 	s.anonymous = true
 
-	o = s:option(DynamicList, "main_server", translate("Main Server"))
+	o = s:option(ListValue, "main_server", translate("Main Server"))
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
@@ -98,6 +99,15 @@ if has_redir then
 	o.default = "nil"
 	o.rmempty = false
 
+	o = s:option(Value, "processes", translate("Multiprocessing"))
+	o:value(0, translatef("Auto(%u processes)", cores))
+	for v = 1, cores * 2 do
+		o:value(v, translatef("%u processes", v))
+	end
+	o.datatype = "uinteger"
+	o.default = 0
+	o.rmempty = false
+
 	o = s:option(Value, "local_port", translate("Local Port"))
 	o.datatype = "port"
 	o.default = 1234
@@ -110,14 +120,23 @@ if has_redir then
 end
 
 -- [[ SOCKS5 Proxy ]]--
-if has_local then
+if has_ss_local or has_ssr_local then
 	s = m:section(TypedSection, "socks5_proxy", translate("SOCKS5 Proxy"))
 	s.anonymous = true
 
-	o = s:option(DynamicList, "server", translate("Server"))
+	o = s:option(ListValue, "server", translate("Server"))
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
+	o.rmempty = false
+
+	o = s:option(Value, "processes", translate("Multiprocessing"))
+	o:value(0, translatef("Auto(%u processes)", cores))
+	for v = 1, cores * 2 do
+		o:value(v, translatef("%u processes", v))
+	end
+	o.datatype = "uinteger"
+	o.default = 0
 	o.rmempty = false
 
 	o = s:option(Value, "local_port", translate("Local Port"))
@@ -132,14 +151,23 @@ if has_local then
 end
 
 -- [[ Port Forward ]]--
-if has_tunnel then
+if has_ss_tunnel or has_ssr_tunnel then
 	s = m:section(TypedSection, "port_forward", translate("Port Forward"))
 	s.anonymous = true
 
-	o = s:option(DynamicList, "server", translate("Server"))
+	o = s:option(ListValue, "server", translate("Server"))
 	o:value("nil", translate("Disable"))
 	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
 	o.default = "nil"
+	o.rmempty = false
+
+	o = s:option(Value, "processes", translate("Multiprocessing"))
+	o:value(0, translatef("Auto(%u processes)", cores))
+	for v = 1, cores * 2 do
+		o:value(v, translatef("%u processes", v))
+	end
+	o.datatype = "uinteger"
+	o.default = 0
 	o.rmempty = false
 
 	o = s:option(Value, "local_port", translate("Local Port"))

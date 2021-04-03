@@ -1,0 +1,163 @@
+#!/usr/bin/lua
+
+--  Copyright (C) 2021 Jian Chang <aa65535@live.com>
+
+--  This is free software, licensed under the GNU General Public License v3.
+--  See /LICENSE for more information.
+
+require "luci.model.uci"
+require "luci.util"
+require "luci.sys"
+require "nixio"
+
+local shadowsocks = "shadowsocks"
+local uci = luci.model.uci.cursor()
+
+function base64_decode(text)
+	if not text then
+		return ""
+	end
+	local data = text:gsub("_", "/"):gsub("-", "+")
+	local fix = #data % 4
+	if fix > 0 then
+		data = data .. string.sub("====", fix + 1)
+	end
+	data = nixio.bin.b64decode(data)
+	if data then
+		return data
+	end
+	return text
+end
+
+function http_get(url)
+	return luci.util.trim(luci.sys.exec("/usr/bin/wget -q --no-check-certificate -O- '%s'" %{url}))
+end
+
+function parse_ss(data)
+	local pos = 0
+	local params = {}
+	local result = {type = "ss", timeout = 300, fast_open = 0, no_delay = 0}
+	if data:find("#") then
+		pos = data:find("#")
+		local alias = data:sub(pos + 1, -1)
+		result.alias = luci.util.urldecode(alias)
+	end
+	data = data:sub(1, pos - 1)
+	data = luci.util.split(data, "/?")
+	local main = luci.util.split(data[1], "@")
+	local info = luci.util.split(base64_decode(main[1]), ":")
+	local host = luci.util.split(base64_decode(main[2]), ":")
+	result.encrypt_method = info[1]
+	result.password = info[2]
+	result.host = host[1]
+	result.server = luci.util.trim(luci.sys.exec("resolveip %s 2>/dev/null" %{host[1]}))
+	result.server_port = host[2]
+	for _, v in pairs(luci.util.split(data[2], "&")) do
+		local t = luci.util.split(v, '=')
+		params[t[1]] = luci.util.urldecode(t[2])
+	end
+	if params.plugin then
+		pos = params.plugin:find(";")
+		if pos then
+			result.plugin = params.plugin:sub(1, pos - 1)
+			result.plugin_opts = params.plugin:sub(pos + 1, -1)
+		else
+			result.plugin = params.plugin
+		end
+	end
+	return result
+end
+
+function parse_ssr(data)
+	data = luci.util.split(base64_decode(data), "/?")
+	local main = luci.util.split(data[1], ":")
+	local result = {type = "ssr", timeout = 300, fast_open = 0}
+	local params = {}
+	result.host = main[1]
+	result.server = luci.util.trim(luci.sys.exec("resolveip %s 2>/dev/null" %{main[1]}))
+	result.server_port = main[2]
+	result.protocol = main[3]
+	result.encrypt_method = main[4]
+	result.obfs = main[5]
+	result.password = base64_decode(main[6])
+	for _, v in pairs(luci.util.split(data[2], "&")) do
+		local t = luci.util.split(v, '=')
+		params[t[1]] = t[2]
+	end
+	result.alias = base64_decode(params.remarks)
+	result.protocol_param = base64_decode(params.protoparam)
+	result.obfs_param = base64_decode(params.obfsparam)
+	return result
+end
+
+function check_filter_words(words, str)
+	for _, w in pairs(words) do
+		if #w > 0 and str:find(w) then
+			return false
+		end
+	end
+	return true
+end
+
+function exec_subscribe(section)
+	local url = uci:get(shadowsocks, section, "subscription_url")
+	if not url then
+		return false
+	end
+	local configs = {}
+	local group = uci:get(shadowsocks, section, "name")
+	local words = uci:get(shadowsocks, section, "filter_words")
+	local lines = luci.util.split(base64_decode(http_get(url)), "\n")
+	for _, v in pairs(lines) do
+		if v:find("://") then
+			local line = luci.util.split(v, "://")
+			if line[1] == 'ss' then
+				configs[#configs + 1] = parse_ss(line[2])
+			elseif line[1] == 'ssr' then
+				configs[#configs + 1] = parse_ssr(line[2])
+			end
+		end
+	end
+	uci:delete_all(shadowsocks, "servers", function(s)
+		return s.group == group
+	end)
+	if words then
+		words = luci.util.split(words, "/")
+	end
+	for _, v in pairs(configs) do
+		if not words or check_filter_words(words, v.alias) then
+			v.group = group
+			uci:section(shadowsocks, "servers", nil, v)
+		end
+	end
+	return true
+end
+
+if #arg > 0 then
+	if arg[1]:lower() == "all" then
+		uci:foreach(shadowsocks, "subscription", function(s)
+			exec_subscribe(s[".name"])
+		end)
+	elseif arg[1]:lower() == "auto" then
+		local hour = os.date("%H")
+		uci:foreach(shadowsocks, "subscription", function(s)
+			if s.auto_update == "1" and s.update_hour == hour then
+				exec_subscribe(s[".name"])
+			end
+		end)
+	else
+		if not exec_subscribe(arg[1]) then
+			os.exit(1)
+		end
+	end
+	uci:commit(shadowsocks)
+	os.exit(0)
+else
+	print("Syntax: subscribe.lua [command]")
+	print("\nAvailable commands:")
+	print("\tall             force subscribe all subscription section")
+	print("\tauto            subscribe eligible subscription section")
+	print("\t[section name]  subscribe a specific name subscription section")
+end
+
+os.exit(1)

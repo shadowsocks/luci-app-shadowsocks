@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 #
-# Copyright (C) 2014-2017 Jian Chang <aa65535@live.com>
+# Copyright (C) 2014-2021 Jian Chang <aa65535@live.com>
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -10,7 +10,7 @@ START=90
 STOP=15
 
 NAME=shadowsocks
-EXTRA_COMMANDS=rules
+EXTRA_COMMANDS="rules"
 
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
@@ -93,19 +93,47 @@ get_crypto_config() {
 	fi
 }
 
+get_processes() {
+	local cores=$(grep 'processor' /proc/cpuinfo | wc -l)
+	local processes=$(uci_get_by_type $1 processes $cores)
+	if [ "$processes" = "0" ]; then
+		echo $cores
+	else
+		echo $processes
+	fi
+}
+
 gen_config_file() {
+	local type=$(uci_get_by_name $1 type)
 	local config_file=/var/etc/$NAME.$1.json
-	cat <<-EOF >$config_file
-		{
-		    "server": "$(uci_get_by_name $1 server)",
-		    "server_port": $(uci_get_by_name $1 server_port),
-		    $(get_crypto_config $1)
-		    "method": "$(uci_get_by_name $1 encrypt_method)",
-		    "local_address": "0.0.0.0",$(get_plugin_config $1)
-		    "timeout": $(uci_get_by_name $1 timeout 60),
-		    "reuse_port": true
-		}
+	if [ "$type" = "ssr" ]; then
+		cat <<-EOF >$config_file
+			{
+			    "server": "$(uci_get_by_name $1 server)",
+			    "server_port": $(uci_get_by_name $1 server_port),
+			    "password": "$(uci_get_by_name $1 password)",
+			    "method": "$(uci_get_by_name $1 encrypt_method)",
+			    "local_address": "0.0.0.0",
+			    "timeout": $(uci_get_by_name $1 timeout 60),
+			    "protocol": "$(uci_get_by_name $1 protocol)",
+			    "protocol_param": "$(uci_get_by_name $1 protocol_param)",
+			    "obfs": "$(uci_get_by_name $1 obfs)",
+			    "obfs_param": "$(uci_get_by_name $1 obfs_param)"
+			}
 EOF
+	else
+		cat <<-EOF >$config_file
+			{
+			    "server": "$(uci_get_by_name $1 server)",
+			    "server_port": $(uci_get_by_name $1 server_port),
+			    $(get_crypto_config $1)
+			    "method": "$(uci_get_by_name $1 encrypt_method)",
+			    "local_address": "0.0.0.0",$(get_plugin_config $1)
+			    "timeout": $(uci_get_by_name $1 timeout 60),
+			    "reuse_port": true
+			}
+EOF
+	fi
 	echo $config_file
 }
 
@@ -126,70 +154,116 @@ start_rules() {
 }
 
 rules() {
-	pidof ss-redir >/dev/null || return 0
+	pidof ss-redir ssr-redir >/dev/null || return 0
 	start_rules || /usr/bin/ss-rules -f
 }
 
 start_redir() {
 	validate_server $1 || return 0
-	ss-redir -c $(gen_config_file $1) $2 $(get_arg_tfo $1) $(get_arg_tnd $1) \
-		-l $(uci_get_by_type transparent_proxy local_port 1234) \
-		--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
-		-f /var/run/ss-redir$3-$1.pid
+	local type=$(uci_get_by_name $1 type)
+	if [ "$type" = "ssr" ]; then
+		command -v ssr-redir >/dev/null || return 1
+		ssr-redir -c $(gen_config_file $1) $3 $(get_arg_tfo $1) \
+			-l $(uci_get_by_type transparent_proxy local_port 1234) \
+			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
+			-f /var/run/ssr-redir$4-$1-$2.pid
+	else
+		command -v ss-redir >/dev/null || return 1
+		ss-redir -c $(gen_config_file $1) $3 $(get_arg_tfo $1) $(get_arg_tnd $1) \
+			-l $(uci_get_by_type transparent_proxy local_port 1234) \
+			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
+			-f /var/run/ss-redir$4-$1-$2.pid
+	fi
 }
 
 ss_redir() {
-	command -v ss-redir >/dev/null 2>&1 || return 1
+	local processes=$(get_processes transparent_proxy)
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
 	has_valid_server $main_server || return 1
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
 	if [ "$udp_relay_server" = "same" ]; then
 		for server in $main_server; do
-			start_redir $server -u
+			for i in $(seq $processes); do
+				start_redir $server $i -u
+			done
+			break
 		done
 	else
 		for server in $main_server; do
-			start_redir $server
+			for i in $(seq $processes); do
+				start_redir $server $i
+			done
+			break
 		done
 		for server in $udp_relay_server; do
-			start_redir $server -U -udp
+			for i in $(seq $processes); do
+				start_redir $server $i -U -udp
+			done
+			break
 		done
 	fi
 }
 
 start_local() {
 	validate_server $1 || return 0
-	ss-local -c $(gen_config_file $1) -u $(get_arg_tfo $1) $(get_arg_tnd $1) \
-		-l $(uci_get_by_type socks5_proxy local_port 1080) \
-		--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
-		-f /var/run/ss-local-$1.pid
+	local type=$(uci_get_by_name $1 type)
+	if [ "$type" = "ssr" ]; then
+		command -v ssr-local >/dev/null 2>&1 || return 0
+		ssr-local -c $(gen_config_file $1) -u $(get_arg_tfo $1) \
+			-l $(uci_get_by_type socks5_proxy local_port 1080) \
+			--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
+			-f /var/run/ssr-local-$1-$2.pid
+	else
+		command -v ss-local >/dev/null 2>&1 || return 0
+		ss-local -c $(gen_config_file $1) -u $(get_arg_tfo $1) $(get_arg_tnd $1) \
+			-l $(uci_get_by_type socks5_proxy local_port 1080) \
+			--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
+			-f /var/run/ss-local-$1-$2.pid
+	fi
 }
 
 ss_local() {
-	command -v ss-local >/dev/null 2>&1 || return 0
+	local processes=$(get_processes socks5_proxy)
 	for server in $(uci_get_by_type socks5_proxy server); do
-		start_local $server
+		for i in $(seq $processes); do
+			start_local $server $i
+		done
+		break
 	done
 }
 
 start_tunnel() {
 	validate_server $1 || return 0
-	ss-tunnel -c $(gen_config_file $1) -u $(get_arg_tfo $1) $(get_arg_tnd $1) \
-		-l $(uci_get_by_type port_forward local_port 5300) \
-		-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
-		--mtu $(uci_get_by_type port_forward mtu 1492) \
-		-f /var/run/ss-tunnel-$1.pid
+	local type=$(uci_get_by_name $1 type)
+	if [ "$type" = "ssr" ]; then
+		command -v ssr-tunnel >/dev/null 2>&1 || return 0
+		ssr-tunnel -c $(gen_config_file $1) \
+			-l $(uci_get_by_type port_forward local_port 5300) \
+			-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
+			--mtu $(uci_get_by_type port_forward mtu 1492) \
+			-f /var/run/ssr-tunnel-$1-$2.pid
+	else
+		command -v ss-tunnel >/dev/null 2>&1 || return 0
+		ss-tunnel -c $(gen_config_file $1) -u $(get_arg_tnd $1) \
+			-l $(uci_get_by_type port_forward local_port 5300) \
+			-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
+			--mtu $(uci_get_by_type port_forward mtu 1492) \
+			-f /var/run/ss-tunnel-$1-$2.pid
+	fi
 }
 
 ss_tunnel() {
-	command -v ss-tunnel >/dev/null 2>&1 || return 0
+	local processes=$(get_processes port_forward)
 	for server in $(uci_get_by_type port_forward server); do
-		start_tunnel $server
+		for i in $(seq $processes); do
+			start_tunnel $server $i
+		done
+		break
 	done
 }
 
 start() {
-	pidof ss-redir ss-local ss-tunnel >/dev/null && return 0
+	pidof ss-redir ss-local ss-tunnel ssr-redir ssr-local ssr-tunnel>/dev/null && return 0
 	mkdir -p /var/run /var/etc
 	ss_redir && rules
 	ss_local
@@ -208,7 +282,7 @@ kill_all() {
 
 stop() {
 	/usr/bin/ss-rules -f
-	kill_all ss-redir ss-local ss-tunnel
+	kill_all ss-redir ss-local ss-tunnel ssr-redir ssr-local ssr-tunnel
 	if [ -f /var/run/ss-plugin ]; then
 		kill_all $(sort -u /var/run/ss-plugin)
 		rm -f /var/run/ss-plugin

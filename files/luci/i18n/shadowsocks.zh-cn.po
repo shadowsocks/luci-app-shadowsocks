@@ -165,3 +165,69 @@ msgstr "内网区域"
 
 msgid "Zone WAN"
 msgstr "外网区域"
+
+msgid "Group Name"
+msgstr "分组名称"
+
+msgid "Server Type"
+msgstr "服务器类型"
+
+msgid "Server Host"
+msgstr "服务器域名"
+
+msgid "Protocol"
+msgstr "协议"
+
+msgid "Protocol Param"
+msgstr "协议参数"
+
+msgid "Obfuscation"
+msgstr "混淆"
+
+msgid "Obfuscation Param"
+msgstr "混淆参数"
+
+msgid "Multiprocessing"
+msgstr "多进程"
+
+msgid "Auto(%u processes)"
+msgstr "自动(%u个进程)"
+
+msgid "%u processes"
+msgstr "%u个进程"
+
+msgid "Subscription Manage"
+msgstr "订阅管理"
+
+msgid "Subscription Name"
+msgstr "订阅名称"
+
+msgid "Subscription URL"
+msgstr "订阅链接"
+
+msgid "Filter Words"
+msgstr "过滤字符"
+
+msgid "Splited by <code style='color:red'>/</code>. Server whose alias contain the above string will be filtered."
+msgstr "多个字符使用 <code style='color:red'>/</code> 隔开，别名包含以上字符的的节点将被过滤。"
+
+msgid "Auto Update"
+msgstr "自动更新"
+
+msgid "Update Hour"
+msgstr "更新时间"
+
+msgid "Update Now"
+msgstr "立即更新"
+
+msgid "Updating..."
+msgstr "更新中……"
+
+msgid "Update Completed"
+msgstr "更新完成"
+
+msgid "Update Failed"
+msgstr "更新失败"
+
+msgid "Update failed, need to save first"
+msgstr "更新失败, 需要先保存"

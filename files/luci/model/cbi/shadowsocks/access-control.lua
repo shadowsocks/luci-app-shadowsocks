@@ -1,11 +1,10 @@
--- Copyright (C) 2016-2017 Jian Chang <aa65535@live.com>
+-- Copyright (C) 2016-2021 Jian Chang <aa65535@live.com>
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
 local shadowsocks = "shadowsocks"
 local uci = luci.model.uci.cursor()
 local nwm = require("luci.model.network").init()
-local chnroute = uci:get_first("chinadns", "chinadns", "chnroute")
 local lan_ifaces = {}
 local io = require "io"
 
@@ -49,7 +48,6 @@ s.anonymous = true
 
 o = s:option(Value, "wan_bp_list", translate("Bypassed IP List"))
 o:value("/dev/null", translate("NULL - As Global Proxy"))
-if chnroute then o:value(chnroute, translate("ChinaDNS CHNRoute")) end
 o.datatype = "or(file, '/dev/null')"
 o.default = "/dev/null"
 o.rmempty = false
