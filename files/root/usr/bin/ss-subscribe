@@ -92,6 +92,7 @@ end
 
 function check_filter_words(words, str)
 	for _, w in pairs(words) do
+		w = luci.util.trim(w)
 		if #w > 0 and str:find(w) then
 			return false
 		end

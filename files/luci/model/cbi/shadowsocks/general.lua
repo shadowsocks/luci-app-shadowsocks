@@ -6,6 +6,8 @@ local shadowsocks = "shadowsocks"
 local uci = luci.model.uci.cursor()
 local servers = {}
 local cores = tonumber(luci.sys.exec("grep 'processor' /proc/cpuinfo | wc -l"))
+local _max = math.max(math.min(cores * 2, 128), cores)
+local _step = math.ceil(_max / 32)
 
 local function has_bin(name)
 	return luci.sys.call("command -v %s >/dev/null" %{name}) == 0
@@ -68,9 +70,9 @@ end
 s = m:section(TypedSection, "general", translate("Global Settings"))
 s.anonymous = true
 
-o = s:option(Value, "startup_delay", translate("Startup Delay"))
+o = s:option(ListValue, "startup_delay", translate("Startup Delay"))
 o:value(0, translate("Not enabled"))
-for _, v in ipairs({5, 10, 15, 25, 40}) do
+for _, v in ipairs({5, 10, 15, 25, 40, 60, 90, 120}) do
 	o:value(v, translatef("%u seconds", v))
 end
 o.datatype = "uinteger"
@@ -99,10 +101,13 @@ if has_ss_redir or has_ssr_redir then
 	o.default = "nil"
 	o.rmempty = false
 
-	o = s:option(Value, "processes", translate("Multiprocessing"))
-	o:value(0, translatef("Auto(%u processes)", cores))
-	for v = 1, cores * 2 do
-		o:value(v, translatef("%u processes", v))
+	o = s:option(ListValue, "processes", translate("Multiprocessing"))
+	for v = 0, _max, _step do
+		if v == 0 then
+			o:value(0, translatef("Auto(%u processes)", cores))
+		else
+			o:value(v, translatef("%u processes", v))
+		end
 	end
 	o.datatype = "uinteger"
 	o.default = 0
@@ -130,10 +135,13 @@ if has_ss_local or has_ssr_local then
 	o.default = "nil"
 	o.rmempty = false
 
-	o = s:option(Value, "processes", translate("Multiprocessing"))
-	o:value(0, translatef("Auto(%u processes)", cores))
-	for v = 1, cores * 2 do
-		o:value(v, translatef("%u processes", v))
+	o = s:option(ListValue, "processes", translate("Multiprocessing"))
+	for v = 0, _max, _step do
+		if v == 0 then
+			o:value(0, translatef("Auto(%u processes)", cores))
+		else
+			o:value(v, translatef("%u processes", v))
+		end
 	end
 	o.datatype = "uinteger"
 	o.default = 0
@@ -161,10 +169,13 @@ if has_ss_tunnel or has_ssr_tunnel then
 	o.default = "nil"
 	o.rmempty = false
 
-	o = s:option(Value, "processes", translate("Multiprocessing"))
-	o:value(0, translatef("Auto(%u processes)", cores))
-	for v = 1, cores * 2 do
-		o:value(v, translatef("%u processes", v))
+	o = s:option(ListValue, "processes", translate("Multiprocessing"))
+	for v = 0, _max, _step do
+		if v == 0 then
+			o:value(0, translatef("Auto(%u processes)", cores))
+		else
+			o:value(v, translatef("%u processes", v))
+		end
 	end
 	o.datatype = "uinteger"
 	o.default = 0

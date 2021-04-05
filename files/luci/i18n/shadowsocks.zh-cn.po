@@ -228,6 +228,3 @@ msgstr "更新完成"
 
 msgid "Update Failed"
 msgstr "更新失败"
-
-msgid "Update failed, need to save first"
-msgstr "更新失败, 需要先保存"

@@ -21,36 +21,47 @@ OpenWrt LuCI for Shadowsocks-libev
 │       └── luci-shadowsocks                        // uci-defaults 脚本
 └── usr/
     ├── bin/
-    │   └── ss-rules                                // 生成代理转发规则的脚本
-    └── lib/
-        └── lua/
-            └── luci/                               // LuCI 部分
-                ├── controller/
-                │   └── shadowsocks.lua             // LuCI 菜单配置
-                ├── i18n/                           // LuCI 语言文件目录
-                │   └── shadowsocks.zh-cn.lmo
-                └── model/
-                    └── cbi/
-                        └── shadowsocks/
-                            ├── general.lua         // LuCI 基本设置
-                            ├── servers.lua         // LuCI 服务器列表
-                            ├── servers-details.lua // LuCI 服务器编辑
-                            └── access-control.lua  // LuCI 访问控制
+    │   ├── ss-rules                                // 生成代理转发规则的脚本
+    │   └── ss-subscribe                            // 订阅脚本
+    │── lib/
+    │   └── lua/
+    │       └── luci/                               // LuCI 部分
+    │           ├── controller/
+    │           │   └── shadowsocks.lua             // LuCI 菜单配置
+    │           ├── i18n/                           // LuCI 语言文件目录
+    │           │   └── shadowsocks.zh-cn.lmo
+    │           │── model/
+    │           │   └── cbi/
+    │           │       └── shadowsocks/
+    │           │           ├── general.lua         // LuCI 基本设置
+    │           │           ├── subscription.lua    // LuCI 订阅管理
+    │           │           ├── servers.lua         // LuCI 服务器列表
+    │           │           ├── servers-details.lua // LuCI 服务器编辑
+    │           │           └── access-control.lua  // LuCI 访问控制
+    │           └── view
+    │               └── shadowsocks/
+    │                   ├── general.htm             // LuCI View 基本设置
+    │                   ├── servers-details.htm     // LuCI View 服务器编辑
+    │                   └── subscribe.htm           // LuCI View 订阅管理
+    └── share/
+        └── rpcd/
+            └── acl.d/
+                └── luci-app-shadowsocks.json       // UCI 访问控制列表
 ```
 
 依赖
 ---
 
-软件包的正常使用需要依赖 `iptables` 和 `ipset`.  
+软件包的正常使用需要依赖 `wget`、`resolveip`、`iptables` 和 `ipset`.  
 软件包不显式依赖 `shadowsocks-libev`, 会根据用户添加的可执行文件启用相应的功能.  
 可执行文件可通过安装 [openwrt-shadowsocks][openwrt-shadowsocks] 中提供的 `shadowsocks-libev` 获得.  
 只有当文件存在时, 相应的功能才可被使用, 并显示相应的 LuCI 设置界面.  
 
- 可执行文件  | 可选 | 功能        | TCP协议 | UDP协议 
- ------------|------|-------------|---------|-----------------------------------
- `ss-redir`  | 是   | 透明代理    | 支持    | 需安装 `iptables-mod-tproxy`, `ip`
- `ss-local`  | 是   | SOCKS5 代理 | 支持    | 支持
- `ss-tunnel` | 是   | 端口转发    | 支持    | 支持
+ 可执行文件     | 可选 | 功能        | TCP协议 | UDP协议 
+ ---------------|------|-------------|---------|-----------------------------------
+ `ss(r)-redir`  | 是   | 透明代理    | 支持    | 需安装 `iptables-mod-tproxy`, `ip`
+ `ss(r)-local`  | 是   | SOCKS5 代理 | 支持    | 支持
+ `ss(r)-tunnel` | 是   | 端口转发    | 支持    | 支持
 
 注: 可执行文件在 `$PATH` 环境变量所表示的搜索路径中, 都可被正确调用.
 
