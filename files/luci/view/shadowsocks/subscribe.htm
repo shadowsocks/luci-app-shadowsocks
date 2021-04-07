@@ -1,0 +1,32 @@
+<%#
+ Copyright (C) 2021 Jian Chang <aa65535@live.com>
+ Licensed to the public under the GNU General Public License v3.
+-%>
+
+<%+cbi/valueheader%>
+<input type="button" id="<%=cbid%>" class="cbi-button cbi-input-apply" value="<%:Update Now%>" />
+<script type="text/javascript">//<![CDATA[
+	(function($) {
+		$("<%=cbid%>").onclick = function() {
+			var btn = this;
+			var section = '<%=section%>';
+			btn.disabled = true;
+			btn.value = '<%:Updating...%>';
+			XHR.get('<%=luci.dispatcher.build_url("admin", "services", "shadowsocks", "subscribe")%>', { section }, function(x, resp) {
+				if (resp.code) {
+					btn.value = '<%:Update Failed%>';
+				} else {
+					btn.value = '<%:Update Completed%>';
+				}
+			});
+			return false;
+		};
+		if (!'<%=self.url:cfgvalue(section)%>') {
+			var wrap = $('<%=cbid%>'.replaceAll('.', '-').replace('cbid', 'cbi'));
+			wrap.parentNode.removeChild(wrap);
+		}
+	}(function(id) {
+		return document.getElementById(id);
+	}));
+//]]></script>
+<%+cbi/valuefooter%>

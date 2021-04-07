@@ -1,4 +1,4 @@
--- Copyright (C) 2016-2017 Jian Chang <aa65535@live.com>
+-- Copyright (C) 2016-2021 Jian Chang <aa65535@live.com>
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
@@ -26,6 +26,19 @@ function o.cfgvalue(...)
 	return Value.cfgvalue(...) or translate("None")
 end
 
+o = s:option(DummyValue, "group", translate("Group Name"))
+function o.cfgvalue(...)
+	return Value.cfgvalue(...) or translate("None")
+end
+
+o = s:option(DummyValue, "type", translate("Server Type"))
+function o.cfgvalue(...)
+	if Value.cfgvalue(...) == "ssr" then
+		return "ShadowsocksR"
+	end
+	return "Shadowsocks"
+end
+
 o = s:option(DummyValue, "server", translate("Server Address"))
 function o.cfgvalue(...)
 	return Value.cfgvalue(...) or "?"
@@ -40,11 +53,6 @@ o = s:option(DummyValue, "encrypt_method", translate("Encrypt Method"))
 function o.cfgvalue(...)
 	local v = Value.cfgvalue(...)
 	return v and v:upper() or "?"
-end
-
-o = s:option(DummyValue, "plugin", translate("Plugin"))
-function o.cfgvalue(...)
-	return Value.cfgvalue(...) or translate("None")
 end
 
 return m
