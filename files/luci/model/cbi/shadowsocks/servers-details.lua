@@ -65,6 +65,7 @@ end
 
 local function has_v2ray_bin()
 	return has_bin("v2ray") or has_bin("xray")
+end
 
 local function support_fast_open()
 	return luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim() == "3"
@@ -95,7 +96,7 @@ o.rmempty = true
 o = s:option(ListValue, "type", translate("Server Type"))
 if has_ss_bins() then o:value("ss", "Shadowsocks") end
 if has_ssr_bins() then o:value("ssr", "ShadowsocksR") end
-if has_v2ray_bin() then o:value("v2ray", "V2ray") end
+o:value("v2ray", "V2ray")
 o.default = "ss"
 o.rmempty = false
 
