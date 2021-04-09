@@ -10,7 +10,7 @@ require "luci.util"
 require "luci.sys"
 require "nixio"
 
-local shadowsocks = "shadowsocks"
+local config = "shadowsocks"
 local uci = luci.model.uci.cursor()
 
 function base64_decode(text)
@@ -30,7 +30,12 @@ function base64_decode(text)
 end
 
 function http_get(url)
-	return luci.util.trim(luci.sys.exec("/usr/bin/wget -q --no-check-certificate -O- '%s'" %{url}))
+	return luci.util.trim(luci.util.exec("/usr/bin/wget -q --no-check-certificate -O- '%s'" %{url}))
+end
+
+function resolveip(host)
+	local ret = luci.util.split(luci.util.exec("resolveip -4 -t 5 %s 2>/dev/null" %{host}), "\n")
+	return luci.util.trim(ret[1])
 end
 
 function parse_ss(data)
@@ -50,7 +55,7 @@ function parse_ss(data)
 	result.encrypt_method = info[1]
 	result.password = info[2]
 	result.host = host[1]
-	result.server = luci.util.trim(luci.sys.exec("resolveip %s 2>/dev/null" %{host[1]}))
+	result.server = resolveip(host[1])
 	result.server_port = host[2]
 	for _, v in pairs(luci.util.split(data[2], "&")) do
 		local t = luci.util.split(v, '=')
@@ -74,7 +79,7 @@ function parse_ssr(data)
 	local result = {type = "ssr", timeout = 300, fast_open = 0}
 	local params = {}
 	result.host = main[1]
-	result.server = luci.util.trim(luci.sys.exec("resolveip %s 2>/dev/null" %{main[1]}))
+	result.server = resolveip(main[1])
 	result.server_port = main[2]
 	result.protocol = main[3]
 	result.encrypt_method = main[4]
@@ -93,7 +98,7 @@ end
 function check_filter_words(words, str)
 	for _, w in pairs(words) do
 		w = luci.util.trim(w)
-		if #w > 0 and str:find(w) then
+		if #w > 0 and str:find(w, 1, true) then
 			return false
 		end
 	end
@@ -101,13 +106,11 @@ function check_filter_words(words, str)
 end
 
 function exec_subscribe(section)
-	local url = uci:get(shadowsocks, section, "subscription_url")
+	local url = uci:get(config, section, "subscription_url")
 	if not url then
 		return false
 	end
 	local configs = {}
-	local group = uci:get(shadowsocks, section, "name")
-	local words = uci:get(shadowsocks, section, "filter_words")
 	local lines = luci.util.split(base64_decode(http_get(url)), "\n")
 	for _, v in pairs(lines) do
 		if v:find("://") then
@@ -119,7 +122,12 @@ function exec_subscribe(section)
 			end
 		end
 	end
-	uci:delete_all(shadowsocks, "servers", function(s)
+	if #configs == 0 then
+		return false
+	end
+	local group = uci:get(config, section, "name")
+	local words = uci:get(config, section, "filter_words")
+	uci:delete_all(config, "servers", function(s)
 		return s.group == group
 	end)
 	if words then
@@ -128,7 +136,7 @@ function exec_subscribe(section)
 	for _, v in pairs(configs) do
 		if not words or check_filter_words(words, v.alias) then
 			v.group = group
-			uci:section(shadowsocks, "servers", nil, v)
+			uci:section(config, "servers", nil, v)
 		end
 	end
 	return true
@@ -136,12 +144,12 @@ end
 
 if #arg > 0 then
 	if arg[1]:lower() == "all" then
-		uci:foreach(shadowsocks, "subscription", function(s)
+		uci:foreach(config, "subscription", function(s)
 			exec_subscribe(s[".name"])
 		end)
 	elseif arg[1]:lower() == "auto" then
 		local hour = os.date("%H")
-		uci:foreach(shadowsocks, "subscription", function(s)
+		uci:foreach(config, "subscription", function(s)
 			if s.auto_update == "1" and s.update_hour == hour then
 				exec_subscribe(s[".name"])
 			end
@@ -151,14 +159,16 @@ if #arg > 0 then
 			os.exit(1)
 		end
 	end
-	uci:commit(shadowsocks)
+	if uci:commit(config) then
+		os.execute("/etc/init.d/%s restart" %{config})
+	end
 	os.exit(0)
 else
 	print("Syntax: subscribe.lua [command]")
 	print("\nAvailable commands:")
-	print("\tall             force subscribe all subscription section")
-	print("\tauto            subscribe eligible subscription section")
-	print("\t[section name]  subscribe a specific name subscription section")
+	print("\tall                 force subscribe all subscription section")
+	print("\tauto                subscribe eligible subscription section")
+	print("\t[UCI section name]  subscribe a specific name subscription section")
 end
 
 os.exit(1)

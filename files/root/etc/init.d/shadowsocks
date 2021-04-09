@@ -12,6 +12,8 @@ STOP=15
 NAME=shadowsocks
 EXTRA_COMMANDS="rules"
 
+. /usr/share/libubox/jshn.sh
+
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
 	echo ${ret:=$3}
@@ -31,13 +33,6 @@ uci_bool_by_name() {
 
 validate_server() {
 	[ "$(uci get $NAME.$1 2>/dev/null)" = "servers" ]
-}
-
-has_valid_server() {
-	for server in $@; do
-		validate_server $server && return 0
-	done
-	return 1
 }
 
 get_arg_udp() {
@@ -69,30 +64,6 @@ get_lan_hosts() {
 		echo "$(uci_get_by_name $1 type),$(uci_get_by_name $1 host)"
 }
 
-get_plugin_config() {
-	local plugin=$(uci_get_by_name $1 plugin)
-	local plugin_opts=$(uci_get_by_name $1 plugin_opts)
-	if [ -n "$plugin" ]; then
-		echo $plugin >>/var/run/ss-plugin
-		echo -e  "\n    \"plugin\": \"$plugin\","
-		if [ -n "$plugin_opts" ]; then
-			echo "    \"plugin_opts\": \"$plugin_opts\","
-		fi
-	fi
-}
-
-get_crypto_config() {
-	local key=$(uci_get_by_name $1 key)
-	local password=$(uci_get_by_name $1 password)
-	if [ -n "$key" ]; then
-		echo "\"key\": \"$key\","
-	elif [ -n "$password" ]; then
-		echo "\"password\": \"$password\","
-	else
-		logger -st $NAME -p3 "The password or key is not set."
-	fi
-}
-
 get_processes() {
 	local cores=$(grep 'processor' /proc/cpuinfo | wc -l)
 	local processes=$(uci_get_by_type $1 processes $cores)
@@ -104,35 +75,42 @@ get_processes() {
 }
 
 gen_config_file() {
-	local type=$(uci_get_by_name $1 type)
 	local config_file=/var/etc/$NAME.$1.json
-	if [ "$type" = "ssr" ]; then
-		cat <<-EOF >$config_file
-			{
-			    "server": "$(uci_get_by_name $1 server)",
-			    "server_port": $(uci_get_by_name $1 server_port),
-			    "password": "$(uci_get_by_name $1 password)",
-			    "method": "$(uci_get_by_name $1 encrypt_method)",
-			    "local_address": "0.0.0.0",
-			    "timeout": $(uci_get_by_name $1 timeout 60),
-			    "protocol": "$(uci_get_by_name $1 protocol)",
-			    "protocol_param": "$(uci_get_by_name $1 protocol_param)",
-			    "obfs": "$(uci_get_by_name $1 obfs)",
-			    "obfs_param": "$(uci_get_by_name $1 obfs_param)"
-			}
-EOF
-	else
-		cat <<-EOF >$config_file
-			{
-			    "server": "$(uci_get_by_name $1 server)",
-			    "server_port": $(uci_get_by_name $1 server_port),
-			    $(get_crypto_config $1)
-			    "method": "$(uci_get_by_name $1 encrypt_method)",
-			    "local_address": "0.0.0.0",$(get_plugin_config $1)
-			    "timeout": $(uci_get_by_name $1 timeout 60),
-			    "reuse_port": true
-			}
-EOF
+	if [ "$2" = "1" ]; then
+		json_init
+		json_add_string "server" "$(uci_get_by_name $1 server)"
+		json_add_int "server_port" $(uci_get_by_name $1 server_port)
+		json_add_string "method" "$(uci_get_by_name $1 encrypt_method)"
+		json_add_string "local_address" "0.0.0.0"
+		json_add_int "timeout" $(uci_get_by_name $1 timeout 60)
+		local type=$(uci_get_by_name $1 type)
+		if [ "$type" = "ssr" ]; then
+			json_add_string "password" "$(uci_get_by_name $1 password)"
+			json_add_string "protocol" "$(uci_get_by_name $1 protocol)"
+			json_add_string "protocol_param" "$(uci_get_by_name $1 protocol_param)"
+			json_add_string "obfs" "$(uci_get_by_name $1 obfs)"
+			json_add_string "obfs_param" "$(uci_get_by_name $1 obfs_param)"
+		else
+			local key=$(uci_get_by_name $1 key)
+			local password=$(uci_get_by_name $1 password)
+			if [ -n "$key" ]; then
+				json_add_string "key" "$key"
+			elif [ -n "$password" ]; then
+				json_add_string "password" "$password"
+			fi
+			local plugin=$(uci_get_by_name $1 plugin)
+			local plugin_opts=$(uci_get_by_name $1 plugin_opts)
+			if [ -n "$plugin" ]; then
+				echo $plugin >>/var/run/ss-plugin
+				json_add_string "plugin" "$plugin"
+				if [ -n "$plugin_opts" ]; then
+					json_add_string "plugin_opts" "$plugin_opts"
+				fi
+			fi
+			json_add_boolean "reuse_port" 1
+		fi
+		json_close_object
+		json_dump -i >$config_file
 	fi
 	echo $config_file
 }
@@ -163,13 +141,13 @@ start_redir() {
 	local type=$(uci_get_by_name $1 type)
 	if [ "$type" = "ssr" ]; then
 		command -v ssr-redir >/dev/null || return 1
-		ssr-redir -c $(gen_config_file $1) $3 $(get_arg_tfo $1) \
+		ssr-redir -c $(gen_config_file $1 $2) $3 $(get_arg_tfo $1) \
 			-l $(uci_get_by_type transparent_proxy local_port 1234) \
 			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
 			-f /var/run/ssr-redir$4-$1-$2.pid
 	else
 		command -v ss-redir >/dev/null || return 1
-		ss-redir -c $(gen_config_file $1) $3 $(get_arg_tfo $1) $(get_arg_tnd $1) \
+		ss-redir -c $(gen_config_file $1 $2) $3 $(get_arg_tfo $1) $(get_arg_tnd $1) \
 			-l $(uci_get_by_type transparent_proxy local_port 1234) \
 			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
 			-f /var/run/ss-redir$4-$1-$2.pid
@@ -179,27 +157,17 @@ start_redir() {
 ss_redir() {
 	local processes=$(get_processes transparent_proxy)
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
-	has_valid_server $main_server || return 1
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
 	if [ "$udp_relay_server" = "same" ]; then
-		for server in $main_server; do
-			for i in $(seq $processes); do
-				start_redir $server $i -u
-			done
-			break
+		for i in $(seq $processes); do
+			start_redir $main_server $i -u
 		done
 	else
-		for server in $main_server; do
-			for i in $(seq $processes); do
-				start_redir $server $i
-			done
-			break
+		for i in $(seq $processes); do
+			start_redir $main_server $i
 		done
-		for server in $udp_relay_server; do
-			for i in $(seq $processes); do
-				start_redir $server $i -U -udp
-			done
-			break
+		for i in $(seq $processes); do
+			start_redir $udp_relay_server $i -U -udp
 		done
 	fi
 }
@@ -209,13 +177,13 @@ start_local() {
 	local type=$(uci_get_by_name $1 type)
 	if [ "$type" = "ssr" ]; then
 		command -v ssr-local >/dev/null 2>&1 || return 0
-		ssr-local -c $(gen_config_file $1) -u $(get_arg_tfo $1) \
+		ssr-local -c $(gen_config_file $1 $2) -u $(get_arg_tfo $1) \
 			-l $(uci_get_by_type socks5_proxy local_port 1080) \
 			--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
 			-f /var/run/ssr-local-$1-$2.pid
 	else
 		command -v ss-local >/dev/null 2>&1 || return 0
-		ss-local -c $(gen_config_file $1) -u $(get_arg_tfo $1) $(get_arg_tnd $1) \
+		ss-local -c $(gen_config_file $1 $2) -u $(get_arg_tfo $1) $(get_arg_tnd $1) \
 			-l $(uci_get_by_type socks5_proxy local_port 1080) \
 			--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
 			-f /var/run/ss-local-$1-$2.pid
@@ -224,11 +192,9 @@ start_local() {
 
 ss_local() {
 	local processes=$(get_processes socks5_proxy)
-	for server in $(uci_get_by_type socks5_proxy server); do
-		for i in $(seq $processes); do
-			start_local $server $i
-		done
-		break
+	local server=$(uci_get_by_type socks5_proxy server)
+	for i in $(seq $processes); do
+		start_local $server $i
 	done
 }
 
@@ -237,14 +203,14 @@ start_tunnel() {
 	local type=$(uci_get_by_name $1 type)
 	if [ "$type" = "ssr" ]; then
 		command -v ssr-tunnel >/dev/null 2>&1 || return 0
-		ssr-tunnel -c $(gen_config_file $1) \
+		ssr-tunnel -c $(gen_config_file $1 $2) \
 			-l $(uci_get_by_type port_forward local_port 5300) \
 			-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
 			--mtu $(uci_get_by_type port_forward mtu 1492) \
 			-f /var/run/ssr-tunnel-$1-$2.pid
 	else
 		command -v ss-tunnel >/dev/null 2>&1 || return 0
-		ss-tunnel -c $(gen_config_file $1) -u $(get_arg_tnd $1) \
+		ss-tunnel -c $(gen_config_file $1 $2) -u $(get_arg_tnd $1) \
 			-l $(uci_get_by_type port_forward local_port 5300) \
 			-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
 			--mtu $(uci_get_by_type port_forward mtu 1492) \
@@ -254,11 +220,9 @@ start_tunnel() {
 
 ss_tunnel() {
 	local processes=$(get_processes port_forward)
-	for server in $(uci_get_by_type port_forward server); do
-		for i in $(seq $processes); do
-			start_tunnel $server $i
-		done
-		break
+	local server=$(uci_get_by_type port_forward server)
+	for i in $(seq $processes); do
+		start_tunnel $server $i
 	done
 }
 
@@ -283,6 +247,7 @@ kill_all() {
 stop() {
 	/usr/bin/ss-rules -f
 	kill_all ss-redir ss-local ss-tunnel ssr-redir ssr-local ssr-tunnel
+	rm -f /var/run/ss*.pid
 	if [ -f /var/run/ss-plugin ]; then
 		kill_all $(sort -u /var/run/ss-plugin)
 		rm -f /var/run/ss-plugin
