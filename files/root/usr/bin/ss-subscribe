@@ -164,7 +164,7 @@ if #arg > 0 then
 	end
 	os.exit(0)
 else
-	print("Syntax: subscribe.lua [command]")
+	print("Syntax: ss-subscribe [command]")
 	print("\nAvailable commands:")
 	print("\tall                 force subscribe all subscription section")
 	print("\tauto                subscribe eligible subscription section")

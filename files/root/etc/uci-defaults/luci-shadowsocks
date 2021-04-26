@@ -22,8 +22,11 @@ uci -q batch <<-EOF >/dev/null
 	set firewall.shadowsocks.reload=1
 	commit firewall
 EOF
-content=$(grep -v 'ss-subscribe' /etc/crontabs/root)
-echo "$content" >/etc/crontabs/root
+if [ -f /etc/crontabs/root ]; then
+	content=$(grep -v 'ss-subscribe' /etc/crontabs/root)
+	echo "$content" >/etc/crontabs/root
+fi
+mkdir -p /etc/crontabs
 echo '5  *  *  *  *  /usr/bin/ss-subscribe auto >/dev/null 2>&1' >>/etc/crontabs/root
 /etc/init.d/cron restart >/dev/null 2>&1
 exit 0
