@@ -57,9 +57,11 @@ function parse_ss(data)
 	result.host = host[1]
 	result.server = resolveip(host[1])
 	result.server_port = host[2]
-	for _, v in pairs(luci.util.split(data[2], "&")) do
-		local t = luci.util.split(v, '=')
-		params[t[1]] = luci.util.urldecode(t[2])
+	if data[2] ~= nil then
+		for _, v in pairs(luci.util.split(data[2], "&")) do
+			local t = luci.util.split(v, '=')
+			params[t[1]] = luci.util.urldecode(t[2])
+		end
 	end
 	if params.plugin then
 		pos = params.plugin:find(";")
@@ -85,9 +87,11 @@ function parse_ssr(data)
 	result.encrypt_method = main[4]
 	result.obfs = main[5]
 	result.password = base64_decode(main[6])
-	for _, v in pairs(luci.util.split(data[2], "&")) do
-		local t = luci.util.split(v, '=')
-		params[t[1]] = t[2]
+	if data[2] ~= nil then
+		for _, v in pairs(luci.util.split(data[2], "&")) do
+			local t = luci.util.split(v, '=')
+			params[t[1]] = t[2]
+		end
 	end
 	result.alias = base64_decode(params.remarks)
 	result.protocol_param = base64_decode(params.protoparam)
