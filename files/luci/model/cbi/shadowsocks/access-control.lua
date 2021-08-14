@@ -22,7 +22,9 @@ local function ipv4_hints(callback)
 	end)
 	uci:foreach("dhcp", "host", function(s)
 		for mac in luci.util.imatch(s.mac) do
-			hosts[s.ip] = s.name or mac:upper()
+			if s.ip then
+				hosts[s.ip] = s.name or mac:upper()
+			end
 		end
 	end)
 	for ip, name in pairs(hosts) do
