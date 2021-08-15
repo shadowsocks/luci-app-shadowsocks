@@ -75,7 +75,7 @@ OpenWrt LuCI for Shadowsocks-libev
 编译
 ---
 
-从 OpenWrt 的 [SDK][openwrt-sdk] 编译  
+1. 从 OpenWrt 的 [SDK][openwrt-sdk] 编译  
 ```bash
 # 解压下载好的 SDK
 tar xjf OpenWrt-SDK-ar71xx-for-linux-x86_64-gcc-4.8-linaro_uClibc-0.9.33.2.tar.bz2
@@ -92,6 +92,18 @@ make menuconfig
 make package/luci-app-shadowsocks/compile V=99
 ```
 
+2. 从 [Lean Openwrt] 源码编译
+```bash
+# 进入指定文件夹
+cd lede/package/lean/
+# Clone 项目
+git clone https://github.com/shadowsocks/luci-app-shadowsocks.git
+# 选择要编译的包 LuCI -> 3. Applications
+make menuconfig
+# 开始编译
+make package/lean/luci-app-shadowsocks/compile V=99
+```
+
  [release_badge]: https://img.shields.io/github/release/shadowsocks/luci-app-shadowsocks.svg
  [release_url]: https://github.com/shadowsocks/luci-app-shadowsocks/releases/latest
  [openwrt-shadowsocks]: https://github.com/shadowsocks/openwrt-shadowsocks
@@ -100,3 +112,4 @@ make package/luci-app-shadowsocks/compile V=99
  [Use-UCI-system]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/Use-UCI-system
  [uci]: https://wiki.openwrt.org/doc/uci
  [LuCI-Access-Control]: https://github.com/shadowsocks/luci-app-shadowsocks/wiki/LuCI-Access-Control
+ [Lean Openwrt]: https://github.com/coolsnowwolf/lede

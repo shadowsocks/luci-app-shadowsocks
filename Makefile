@@ -15,8 +15,6 @@ PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 PKG_MAINTAINER:=Jian Chang <aa65535@live.com>
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
-
 include $(INCLUDE_DIR)/package.mk
 
 define Package/luci-app-shadowsocks/Default
@@ -36,11 +34,6 @@ define Package/luci-app-shadowsocks/description
 endef
 
 Package/luci-app-shadowsocks-without-ipset/description = $(Package/luci-app-shadowsocks/description)
-
-define Build/Prepare
-	$(foreach po,$(wildcard ${CURDIR}/files/luci/i18n/*.po), \
-		po2lmo $(po) $(PKG_BUILD_DIR)/$(patsubst %.po,%.lmo,$(notdir $(po)));)
-endef
 
 define Build/Configure
 endef
@@ -69,25 +62,12 @@ endef
 Package/luci-app-shadowsocks-without-ipset/conffiles = $(Package/luci-app-shadowsocks/conffiles)
 
 define Package/luci-app-shadowsocks/install
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
+	cp -pR ./luasrc/* $(1)/usr/lib/lua/luci
+	$(INSTALL_DIR) $(1)/
+	cp -pR ./root/* $(1)/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/shadowsocks.*.lmo $(1)/usr/lib/lua/luci/i18n/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(INSTALL_DATA) ./files/luci/controller/*.lua $(1)/usr/lib/lua/luci/controller/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/shadowsocks
-	$(INSTALL_DATA) ./files/luci/model/cbi/shadowsocks/*.lua $(1)/usr/lib/lua/luci/model/cbi/shadowsocks/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/shadowsocks
-	$(INSTALL_DATA) ./files/luci/view/shadowsocks/*.htm $(1)/usr/lib/lua/luci/view/shadowsocks/
-	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(INSTALL_DATA) ./files/root/usr/share/rpcd/acl.d/luci-app-shadowsocks.json $(1)/usr/share/rpcd/acl.d/
-	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) ./files/root/etc/config/shadowsocks $(1)/etc/config/shadowsocks
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/root/etc/init.d/shadowsocks $(1)/etc/init.d/shadowsocks
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/root/etc/uci-defaults/luci-shadowsocks $(1)/etc/uci-defaults/luci-shadowsocks
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./files/root/usr/bin/ss-rules$(2) $(1)/usr/bin/ss-rules
-	$(INSTALL_BIN) ./files/root/usr/bin/ss-subscribe $(1)/usr/bin/ss-subscribe
+	po2lmo ./po/zh-cn/shadowsocks.po $(1)/usr/lib/lua/luci/i18n/shadowsocks.zh-cn.lmo
 endef
 
 Package/luci-app-shadowsocks-without-ipset/install = $(call Package/luci-app-shadowsocks/install,$(1),-without-ipset)
