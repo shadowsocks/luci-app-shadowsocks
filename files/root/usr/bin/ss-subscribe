@@ -1,6 +1,6 @@
 #!/usr/bin/lua
 
---  Copyright (C) 2021 Jian Chang <aa65535@live.com>
+--  Copyright (C) 2021-2022 Jian Chang <aa65535@live.com>
 
 --  This is free software, licensed under the GNU General Public License v3.
 --  See /LICENSE for more information.
@@ -12,6 +12,8 @@ require "nixio"
 
 local config = "shadowsocks"
 local uci = luci.model.uci.cursor()
+local bit = luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim()
+local tfo = bit == "1" or bit == "3"
 
 function base64_decode(text)
 	if not text then
@@ -41,7 +43,7 @@ end
 function parse_ss(data)
 	local pos = 0
 	local params = {}
-	local result = {type = "ss", timeout = 300, fast_open = 0, no_delay = 0}
+	local result = {type = "ss", timeout = 300, fast_open = tfo, no_delay = 0}
 	if data:find("#") then
 		pos = data:find("#")
 		local alias = data:sub(pos + 1, -1)
@@ -78,7 +80,7 @@ end
 function parse_ssr(data)
 	data = luci.util.split(base64_decode(data), "/?")
 	local main = luci.util.split(data[1], ":")
-	local result = {type = "ssr", timeout = 300, fast_open = 0}
+	local result = {type = "ssr", timeout = 300, fast_open = tfo}
 	local params = {}
 	result.host = main[1]
 	result.server = resolveip(main[1])
@@ -146,7 +148,39 @@ function exec_subscribe(section)
 	return true
 end
 
+function table_equal(t1, t2)
+	for k, v in pairs(t1) do
+		if "table" == type(v) then
+			return table_equal(v, t2[k])
+		else
+			if v ~= t2[k] then
+				return false
+			end
+		end
+	end
+	return true
+end
+
+function get_current_servers()
+	local name = ""
+	local servers = {}
+	local sections = {
+		{"transparent_proxy", "main_server"},
+		{"transparent_proxy", "udp_relay_server"},
+		{"socks5_proxy", "server"},
+		{"port_forward", "server"}
+	}
+	for _, v in pairs(sections) do
+		name = uci:get_first(config, v[1], v[2])
+		if name and name ~= "nil" and name ~= "same" then
+			servers[name] = uci:get_all(config, name)
+		end
+	end
+	return servers
+end
+
 if #arg > 0 then
+	local servers = get_current_servers()
 	if arg[1]:lower() == "all" then
 		uci:foreach(config, "subscription", function(s)
 			exec_subscribe(s[".name"])
@@ -164,7 +198,10 @@ if #arg > 0 then
 		end
 	end
 	if uci:commit(config) then
-		os.execute("/etc/init.d/%s restart" %{config})
+		local current = get_current_servers()
+		if not table_equal(servers, current) then
+			os.execute("/etc/init.d/%s restart" %{config})
+		end
 	end
 	os.exit(0)
 else

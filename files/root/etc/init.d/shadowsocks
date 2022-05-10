@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 #
-# Copyright (C) 2014-2021 Jian Chang <aa65535@live.com>
+# Copyright (C) 2014-2022 Jian Chang <aa65535@live.com>
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -241,6 +241,7 @@ boot() {
 }
 
 kill_all() {
+	pidof $@ || return 1
 	kill -9 $(pidof $@) >/dev/null 2>&1
 }
 

@@ -1,4 +1,4 @@
--- Copyright (C) 2016-2021 Jian Chang <aa65535@live.com>
+-- Copyright (C) 2016-2022 Jian Chang <aa65535@live.com>
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
@@ -64,7 +64,8 @@ local function has_ssr_bins()
 end
 
 local function support_fast_open()
-	return luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim() == "3"
+	local bit = luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim()
+	return bit == "1" or bit == "3"
 end
 
 m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Edit Server")})
