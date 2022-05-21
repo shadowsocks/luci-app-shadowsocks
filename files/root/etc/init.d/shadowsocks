@@ -115,6 +115,12 @@ gen_config_file() {
 	echo $config_file
 }
 
+pid_check() {
+	[ -f $PID_FILE ] || return 1
+	kill -0 $(echo $(cat $PID_FILE | sort -u)) 2>/dev/null || return 1
+	return 0
+}
+
 start_rules() {
 	config_load $NAME
 	/usr/bin/ss-rules \
