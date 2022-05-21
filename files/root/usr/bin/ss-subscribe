@@ -197,10 +197,13 @@ if #arg > 0 then
 			os.exit(1)
 		end
 	end
-	if uci:commit(config) then
+	local changes = uci:changes(config)
+	if #changes > 0 then
 		local current = get_current_servers()
 		if not table_equal(servers, current) then
-			os.execute("/etc/init.d/%s restart" %{config})
+			if uci:commit(config) then
+				os.execute("/etc/init.d/%s restart" %{config})
+			end
 		end
 	end
 	os.exit(0)
