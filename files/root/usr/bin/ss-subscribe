@@ -200,7 +200,9 @@ if #arg > 0 then
 	local changes = uci:changes(config)
 	if #changes > 0 then
 		local current = get_current_servers()
-		if not table_equal(servers, current) then
+		if table_equal(servers, current) then
+			uci:revert(config)
+		else
 			if uci:commit(config) then
 				os.execute("/etc/init.d/%s restart" %{config})
 			end
