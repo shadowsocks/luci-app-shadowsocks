@@ -12,8 +12,8 @@ require "nixio"
 
 local config = "shadowsocks"
 local uci = luci.model.uci.cursor()
-local bit = luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim()
-local tfo = bit == "1" or bit == "3"
+local bit = tonumber(luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim()) or 0
+local tfo = nixio.bit.band(bit, 1) == 1
 
 function base64_decode(text)
 	if not text then

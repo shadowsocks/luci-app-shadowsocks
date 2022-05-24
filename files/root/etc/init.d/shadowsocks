@@ -8,12 +8,9 @@
 
 START=90
 STOP=15
-
+USE_PROCD=1
 NAME=shadowsocks
 EXTRA_COMMANDS="rules"
-PID_FILE=/var/run/shadowsocks_bf67.pid
-
-. /usr/share/libubox/jshn.sh
 
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
@@ -36,42 +33,17 @@ validate_server() {
 	[ "$(uci get $NAME.$1 2>/dev/null)" = "servers" ]
 }
 
-get_arg_udp() {
-	local server=$(uci_get_by_type transparent_proxy udp_relay_server)
-	[ "$server" = "same" ] || validate_server $server && echo "-u"
+is_ssr() {
+	[ "$(uci_get_by_name $1 type)" = "ssr" ]
 }
 
-get_arg_out() {
-	case "$(uci_get_by_type access_control self_proxy 1)" in
-		1) echo "-o";;
-		2) echo "-O";;
-	esac
-}
-
-get_arg_tfo() {
-	uci_bool_by_name $1 fast_open && echo "--fast-open"
-}
-
-get_arg_tnd() {
-	uci_bool_by_name $1 no_delay && echo "--no-delay"
-}
-
-get_server_ips() {
-	echo $(uci_get_by_name $1 server)
-}
-
-get_lan_hosts() {
-	uci_bool_by_name $1 enable && \
-		echo "$(uci_get_by_name $1 type),$(uci_get_by_name $1 host)"
-}
-
-get_processes() {
+seq_processes() {
 	local cores=$(grep 'processor' /proc/cpuinfo | wc -l)
 	local processes=$(uci_get_by_type $1 processes $cores)
 	if [ "$processes" = "0" ]; then
-		echo $cores
+		seq $cores
 	else
-		echo $processes
+		seq $processes
 	fi
 }
 
@@ -82,8 +54,7 @@ gen_config_file() {
 	json_add_string "method" "$(uci_get_by_name $1 encrypt_method)"
 	json_add_string "local_address" "0.0.0.0"
 	json_add_int "timeout" $(uci_get_by_name $1 timeout 60)
-	local type=$(uci_get_by_name $1 type)
-	if [ "$type" = "ssr" ]; then
+	if is_ssr $1; then
 		json_add_string "password" "$(uci_get_by_name $1 password)"
 		json_add_string "protocol" "$(uci_get_by_name $1 protocol)"
 		json_add_string "protocol_param" "$(uci_get_by_name $1 protocol_param)"
@@ -111,16 +82,43 @@ gen_config_file() {
 	json_dump -i >/var/etc/$NAME.$1.json
 }
 
-pid_check() {
-	[ -f $PID_FILE ] || return 1
-	kill -0 $(echo $(cat $PID_FILE | sort -u)) 2>/dev/null || return 1
-	return 0
+procd_common_param() {
+	procd_set_param nice -5
+	procd_set_param limits nofile="65535 65535"
+	procd_set_param respawn
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}
+
+procd_append_bool_by_uci_name() {
+	uci_bool_by_name $2 $3 && procd_append_param command $1
 }
 
 start_rules() {
+	get_arg_udp() {
+		local server=$(uci_get_by_type transparent_proxy udp_relay_server)
+		[ "$server" = "same" ] || validate_server $server && echo "-u"
+	}
+
+	get_arg_out() {
+		case "$(uci_get_by_type access_control self_proxy 1)" in
+			1) echo "-o";;
+			2) echo "-O";;
+		esac
+	}
+
+	get_server_ips() {
+		echo $(uci_get_by_name $1 server)
+	}
+
+	get_lan_hosts() {
+		uci_bool_by_name $1 enable && echo "$(uci_get_by_name $1 type),$(uci_get_by_name $1 host)"
+	}
+
 	config_load $NAME
-	/usr/bin/ss-rules \
-		-s "$(config_foreach get_server_ips servers)" \
+	/usr/bin/ss-rules $(get_arg_out) $(get_arg_udp) \
+		-s "$(echo $(config_foreach get_server_ips servers | sort -u))" \
 		-l "$(uci_get_by_type transparent_proxy local_port 1234)" \
 		-B "$(uci_get_by_type access_control wan_bp_list)" \
 		-b "$(uci_get_by_type access_control wan_bp_ips)" \
@@ -128,130 +126,115 @@ start_rules() {
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
 		-I "$(uci_get_by_type access_control lan_ifaces)" \
 		-d "$(uci_get_by_type access_control lan_target)" \
-		-a "$(config_foreach get_lan_hosts lan_hosts)" \
-		-e "$(uci_get_by_type access_control ipt_ext)" \
-		$(get_arg_out) $(get_arg_udp)
-}
-
-rules() {
-	pid_check || return 0
-	start_rules || /usr/bin/ss-rules -f
+		-a "$(echo $(config_foreach get_lan_hosts lan_hosts))" \
+		-e "$(uci_get_by_type access_control ipt_ext)"
 }
 
 start_redir() {
-	local type=$(uci_get_by_name $1 type)
-	if [ "$type" = "ssr" ]; then
-		command -v ssr-redir >/dev/null || return 1
-		ssr-redir -c /var/etc/$NAME.$1.json $3 $(get_arg_tfo $1) \
-			-l $(uci_get_by_type transparent_proxy local_port 1234) \
-			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
-			-f /var/run/ss-redir$4-$1-$2.pid
-	else
-		command -v ss-redir >/dev/null || return 1
-		ss-redir -c /var/etc/$NAME.$1.json $3 $(get_arg_tfo $1) $(get_arg_tnd $1) \
-			-l $(uci_get_by_type transparent_proxy local_port 1234) \
-			--mtu $(uci_get_by_type transparent_proxy mtu 1492) \
-			-f /var/run/ss-redir$4-$1-$2.pid
-	fi
-	echo $(cat /var/run/ss-redir$4-$1-$2.pid 2>/dev/null) >>$PID_FILE
+	local prog=$(is_ssr $1 && echo ssr-redir || echo ss-redir)
+	command -v $prog >/dev/null 2>&1 || return 0
+	procd_open_instance ss-redir$4-$2
+	procd_set_param command $prog -c /var/etc/$NAME.$1.json $3
+	procd_append_param command -l "$(uci_get_by_type transparent_proxy local_port 1234)"
+	procd_append_param command --mtu "$(uci_get_by_type transparent_proxy mtu 1492)"
+	is_ssr $1 || procd_append_bool_by_uci_name --fast-open $1 fast_open
+	is_ssr $1 || procd_append_bool_by_uci_name --no-delay $1 no_delay
+	procd_set_param pidfile /var/run/ss-redir$4-$1-$2.pid
+	procd_common_param
 }
 
 ss_redir() {
-	local processes=$(get_processes transparent_proxy)
 	local main_server=$(uci_get_by_type transparent_proxy main_server)
 	local udp_relay_server=$(uci_get_by_type transparent_proxy udp_relay_server)
 	validate_server $main_server || return 0
 	gen_config_file $main_server
+	local processes=$(seq_processes transparent_proxy)
 	if [ "$udp_relay_server" = "same" ]; then
-		for i in $(seq $processes); do
+		for i in $processes; do
 			start_redir $main_server $i -u
 		done
 	else
-		for i in $(seq $processes); do
+		for i in $processes; do
 			start_redir $main_server $i
 		done
-		validate_server $udp_relay_server || return 0
-		gen_config_file $udp_relay_server
-		for i in $(seq $processes); do
-			start_redir $udp_relay_server $i -U -udp
-		done
+		if validate_server $udp_relay_server; then
+			gen_config_file $udp_relay_server
+			for i in $processes; do
+				start_redir $udp_relay_server $i -U -udp
+			done
+		fi
 	fi
+	start_rules || /usr/bin/ss-rules -f
 }
 
 start_local() {
-	local type=$(uci_get_by_name $1 type)
-	if [ "$type" = "ssr" ]; then
-		command -v ssr-local >/dev/null 2>&1 || return 0
-		ssr-local -c /var/etc/$NAME.$1.json -u $(get_arg_tfo $1) \
-			-l $(uci_get_by_type socks5_proxy local_port 1080) \
-			--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
-			-f /var/run/ss-local-$1-$2.pid
-	else
-		command -v ss-local >/dev/null 2>&1 || return 0
-		ss-local -c /var/etc/$NAME.$1.json -u $(get_arg_tfo $1) $(get_arg_tnd $1) \
-			-l $(uci_get_by_type socks5_proxy local_port 1080) \
-			--mtu $(uci_get_by_type socks5_proxy mtu 1492) \
-			-f /var/run/ss-local-$1-$2.pid
-	fi
-	echo $(cat /var/run/ss-local-$1-$2.pid 2>/dev/null) >>$PID_FILE
+	local prog=$(is_ssr $1 && echo ssr-local || echo ss-local)
+	command -v $prog >/dev/null 2>&1 || return 0
+	procd_open_instance ss-local-$2
+	procd_set_param command $prog -c /var/etc/$NAME.$1.json -u
+	procd_append_param command -l "$(uci_get_by_type socks5_proxy local_port 1080)"
+	procd_append_param command --mtu "$(uci_get_by_type socks5_proxy mtu 1492)"
+	procd_append_bool_by_uci_name --fast-open $1 fast_open
+	is_ssr $1 || procd_append_bool_by_uci_name --no-delay $1 no_delay
+	procd_set_param pidfile /var/run/ss-local-$1-$2.pid
+	procd_common_param
 }
 
 ss_local() {
-	local processes=$(get_processes socks5_proxy)
 	local server=$(uci_get_by_type socks5_proxy server)
 	validate_server $server || return 0
 	gen_config_file $server
-	for i in $(seq $processes); do
+	for i in $(seq_processes socks5_proxy); do
 		start_local $server $i
 	done
 }
 
 start_tunnel() {
-	local type=$(uci_get_by_name $1 type)
-	if [ "$type" = "ssr" ]; then
-		command -v ssr-tunnel >/dev/null 2>&1 || return 0
-		ssr-tunnel -c /var/etc/$NAME.$1.json \
-			-l $(uci_get_by_type port_forward local_port 5300) \
-			-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
-			--mtu $(uci_get_by_type port_forward mtu 1492) \
-			-f /var/run/ss-tunnel-$1-$2.pid
-	else
-		command -v ss-tunnel >/dev/null 2>&1 || return 0
-		ss-tunnel -c /var/etc/$NAME.$1.json -u $(get_arg_tnd $1) \
-			-l $(uci_get_by_type port_forward local_port 5300) \
-			-L $(uci_get_by_type port_forward destination 8.8.4.4:53) \
-			--mtu $(uci_get_by_type port_forward mtu 1492) \
-			-f /var/run/ss-tunnel-$1-$2.pid
-	fi
-	echo $(cat /var/run/ss-tunnel-$1-$2.pid 2>/dev/null) >>$PID_FILE
+	local prog=$(is_ssr $1 && echo ssr-tunnel || echo ss-tunnel)
+	command -v $prog >/dev/null 2>&1 || return 0
+	procd_open_instance ss-tunnel-$2
+	procd_set_param command $prog -c /var/etc/$NAME.$1.json -u
+	procd_append_param command -l "$(uci_get_by_type port_forward local_port 5300)"
+	procd_append_param command -L "$(uci_get_by_type port_forward destination 8.8.4.4:53)"
+	procd_append_param command --mtu "$(uci_get_by_type port_forward mtu 1492)"
+	procd_append_bool_by_uci_name --fast-open $1 fast_open
+	is_ssr $1 || procd_append_bool_by_uci_name --no-delay $1 no_delay
+	procd_set_param pidfile /var/run/ss-tunnel-$1-$2.pid
+	procd_common_param
 }
 
 ss_tunnel() {
-	local processes=$(get_processes port_forward)
 	local server=$(uci_get_by_type port_forward server)
 	validate_server $server || return 0
 	gen_config_file $server
-	for i in $(seq $processes); do
+	for i in $(seq_processes port_forward); do
 		start_tunnel $server $i
 	done
 }
 
-start() {
-	pid_check && return 0
+service_triggers() {
+	procd_add_reload_trigger $NAME
+}
+
+start_service() {
 	mkdir -p /var/etc
-	ss_redir && rules
+	ss_redir
 	ss_local
 	ss_tunnel
+}
+
+stop_service() {
+	/usr/bin/ss-rules -f
+}
+
+rules() {
+	local running=$(ubus call service list '{"name":"'$NAME'"}' | jsonfilter -l 1 -e "@.$NAME.instances['ss-redir-1'].running")
+	[ "$running" = "true" ] || return 0
+	start_rules || /usr/bin/ss-rules -f
 }
 
 boot() {
 	local delay=$(uci_get_by_type general startup_delay 0)
 	(sleep $delay && start >/dev/null 2>&1) &
 	return 0
-}
-
-stop() {
-	/usr/bin/ss-rules -f
-	kill -15 $(echo $(cat $PID_FILE | sort -u)) >/dev/null 2>&1
-	rm -f /var/run/ss-redir-*.pid /var/run/ss-local-*.pid /var/run/ss-tunnel-*.pid $PID_FILE
 }

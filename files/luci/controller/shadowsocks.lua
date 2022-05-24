@@ -1,4 +1,4 @@
--- Copyright (C) 2014-2021 Jian Chang <aa65535@live.com>
+-- Copyright (C) 2014-2022 Jian Chang <aa65535@live.com>
 -- Licensed to the public under the GNU General Public License v3.
 
 module("luci.controller.shadowsocks", package.seeall)
@@ -56,17 +56,11 @@ function index()
 	page.acl_depends = { "luci-app-shadowsocks" }
 end
 
-local function is_running(name)
-	return luci.sys.call("pidof %s >/dev/null" %{name}) == 0
-end
-
 function action_status()
+	local util = require "luci.util"
+	local list = util.ubus("service", "list", {name = "shadowsocks"})
 	luci.http.prepare_content("application/json")
-	luci.http.write_json({
-		ss_redir = (is_running("ss-redir") or is_running("ssr-redir")),
-		ss_local = (is_running("ss-local") or is_running("ssr-local")),
-		ss_tunnel = (is_running("ss-tunnel") or is_running("ssr-tunnel"))
-	})
+	luci.http.write_json(list)
 end
 
 function action_subscribe()

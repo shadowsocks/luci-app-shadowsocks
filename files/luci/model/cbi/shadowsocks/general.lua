@@ -1,4 +1,4 @@
--- Copyright (C) 2014-2021 Jian Chang <aa65535@live.com>
+-- Copyright (C) 2014-2022 Jian Chang <aa65535@live.com>
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, o
@@ -28,17 +28,9 @@ if not has_ss_redir and not has_ssr_redir and not has_ss_local and not has_ssr_l
 		translate("General Settings")}, '<b style="color:red">shadowsocks-libev binary file not found.</b>')
 end
 
-local function is_running(name)
-	return luci.sys.call("pidof %s >/dev/null" %{name}) == 0
-end
-
-local function get_status(name)
-	return (is_running(name %{"ss"}) or is_running(name %{"ssr"})) and translate("RUNNING") or translate("NOT RUNNING")
-end
-
 uci:foreach(shadowsocks, "servers", function(s)
 	if s.server and s.server_port then
-		servers[#servers+1] = {name = s[".name"], alias = s.alias or "%s:%s" %{s.server, s.server_port}}
+		servers[#servers+1] = {type = s.type or "ss", name = s[".name"], alias = s.alias or "%s:%s" %{s.server, s.server_port}}
 	end
 end)
 
@@ -51,19 +43,19 @@ s.anonymous = true
 
 if has_ss_redir or has_ssr_redir then
 	o = s:option(DummyValue, "_redir_status", translate("Transparent Proxy"))
-	o.value = "<span id=\"_redir_status\">%s</span>" %{get_status("%s-redir")}
+	o.value = "<span id=\"_redir_status\">%s</span>" %{translate("Updating...")}
 	o.rawhtml = true
 end
 
 if has_ss_local or has_ssr_local then
 	o = s:option(DummyValue, "_local_status", translate("SOCKS5 Proxy"))
-	o.value = "<span id=\"_local_status\">%s</span>" %{get_status("%s-local")}
+	o.value = "<span id=\"_local_status\">%s</span>" %{translate("Updating...")}
 	o.rawhtml = true
 end
 
 if has_ss_tunnel or has_ssr_tunnel then
 	o = s:option(DummyValue, "_tunnel_status", translate("Port Forward"))
-	o.value = "<span id=\"_tunnel_status\">%s</span>" %{get_status("%s-tunnel")}
+	o.value = "<span id=\"_tunnel_status\">%s</span>" %{translate("Updating...")}
 	o.rawhtml = true
 end
 
@@ -86,7 +78,11 @@ if has_ss_redir or has_ssr_redir then
 
 	o = s:option(ListValue, "main_server", translate("Main Server"))
 	o:value("nil", translate("Disable"))
-	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
+	for _, s in ipairs(servers) do
+		if (has_ss_redir and s.type == "ss") or (has_ssr_redir and s.type == "ssr") then
+			o:value(s.name, s.alias)
+		end
+	end
 	o.default = "nil"
 	o.rmempty = false
 
@@ -94,7 +90,11 @@ if has_ss_redir or has_ssr_redir then
 	if has_udp_relay() then
 		o:value("nil", translate("Disable"))
 		o:value("same", translate("Same as Main Server"))
-		for _, s in ipairs(servers) do o:value(s.name, s.alias) end
+		for _, s in ipairs(servers) do
+			if (has_ss_redir and s.type == "ss") or (has_ssr_redir and s.type == "ssr") then
+				o:value(s.name, s.alias)
+			end
+		end
 	else
 		o:value("nil", translate("Unusable - Missing iptables-mod-tproxy or ip"))
 	end
@@ -131,7 +131,11 @@ if has_ss_local or has_ssr_local then
 
 	o = s:option(ListValue, "server", translate("Server"))
 	o:value("nil", translate("Disable"))
-	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
+	for _, s in ipairs(servers) do
+		if (has_ss_local and s.type == "ss") or (has_ssr_local and s.type == "ssr") then
+			o:value(s.name, s.alias)
+		end
+	end
 	o.default = "nil"
 	o.rmempty = false
 
@@ -165,7 +169,11 @@ if has_ss_tunnel or has_ssr_tunnel then
 
 	o = s:option(ListValue, "server", translate("Server"))
 	o:value("nil", translate("Disable"))
-	for _, s in ipairs(servers) do o:value(s.name, s.alias) end
+	for _, s in ipairs(servers) do
+		if (has_ss_tunnel and s.type == "ss") or (has_ssr_tunnel and s.type == "ssr") then
+			o:value(s.name, s.alias)
+		end
+	end
 	o.default = "nil"
 	o.rmempty = false
 

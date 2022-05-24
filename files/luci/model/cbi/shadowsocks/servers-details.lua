@@ -64,8 +64,9 @@ local function has_ssr_bins()
 end
 
 local function support_fast_open()
-	local bit = luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim()
-	return bit == "1" or bit == "3"
+	local nixio = require "nixio"
+	local bit = tonumber(luci.sys.exec("cat /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null"):trim()) or 0
+	return nixio.bit.band(bit, 1) == 1
 end
 
 m = Map(shadowsocks, "%s - %s" %{translate("ShadowSocks"), translate("Edit Server")})

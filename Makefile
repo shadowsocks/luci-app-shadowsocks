@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2021 Jian Chang <aa65535@live.com>
+# Copyright (C) 2016-2022 Jian Chang <aa65535@live.com>
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-shadowsocks
-PKG_VERSION:=2.0.4
+PKG_VERSION:=2.1.0
 PKG_RELEASE:=1
 
 PKG_LICENSE:=GPLv3
