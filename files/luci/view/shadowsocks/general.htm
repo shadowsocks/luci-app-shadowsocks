@@ -14,12 +14,14 @@
 		};
 		var instances, keys;
 		XHR.poll(5, "<%=luci.dispatcher.build_url("admin", "services", "shadowsocks", "status")%>", null, function(xhr, data) {
-			if (xhr.status === 200 && data.shadowsocks && data.shadowsocks.instances) {
+			if (xhr.status === 200) {
 				keys = {};
-				instances = data.shadowsocks.instances;
-				for (var n in instances) {
-					if (instances.hasOwnProperty(n) && instances[n].running) {
-						keys[n.split('-')[1]] = true;
+				if (data.shadowsocks && data.shadowsocks.instances) {
+					instances = data.shadowsocks.instances;
+					for (var n in instances) {
+						if (instances.hasOwnProperty(n) && instances[n].running) {
+							keys[n.split('-')[1]] = true;
+						}
 					}
 				}
 				for (var k in elements) {
