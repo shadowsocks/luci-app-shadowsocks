@@ -16,6 +16,7 @@ PKG_LICENSE_FILES:=LICENSE
 PKG_MAINTAINER:=Jian Chang <aa65535@live.com>
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
+PKG_BUILD_DEPENDS:=po2lmo/host
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -25,11 +26,17 @@ define Package/luci-app-shadowsocks/Default
 	SUBMENU:=3. Applications
 	TITLE:=LuCI Support for shadowsocks-libev
 	PKGARCH:=all
-	DEPENDS:=+iptables +wget +resolveip $(1)
 endef
 
-Package/luci-app-shadowsocks = $(call Package/luci-app-shadowsocks/Default,+ipset)
-Package/luci-app-shadowsocks-without-ipset = $(call Package/luci-app-shadowsocks/Default)
+define Package/luci-app-shadowsocks
+	$(call Package/luci-app-shadowsocks/Default)
+	EXTRA_DEPENDS:=iptables, wget, resolveip, ipset
+endef
+
+define Package/luci-app-shadowsocks-without-ipset
+	$(call Package/luci-app-shadowsocks/Default)
+	EXTRA_DEPENDS:=iptables, wget, resolveip
+endef
 
 define Package/luci-app-shadowsocks/description
 	LuCI Support for shadowsocks-libev.

@@ -10,7 +10,11 @@ START=90
 STOP=15
 USE_PROCD=1
 NAME=shadowsocks
-EXTRA_COMMANDS="rules"
+if type extra_command >/dev/null 2>&1; then
+	extra_command "rules" "Reload transparent proxy rules"
+else
+	EXTRA_COMMANDS="rules"
+fi
 
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
@@ -237,4 +241,10 @@ boot() {
 	local delay=$(uci_get_by_type general startup_delay 0)
 	(sleep $delay && start >/dev/null 2>&1) &
 	return 0
+}
+
+reload_service() {
+	stop
+	sleep 1
+	start
 }

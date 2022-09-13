@@ -11,14 +11,12 @@ uci get shadowsocks.@access_control[-1] >/dev/null 2>&1 || \
 	uci add shadowsocks access_control >/dev/null 2>&1
 uci commit shadowsocks
 uci -q batch <<-EOF >/dev/null
-	delete ucitrack.@shadowsocks[-1]
-	commit ucitrack
 	delete firewall.shadowsocks
 	set firewall.shadowsocks=include
 	set firewall.shadowsocks.type=script
 	set firewall.shadowsocks.path=/var/etc/shadowsocks.include
 	set firewall.shadowsocks.family=ipv4
-	set firewall.shadowsocks.reload=1
+	set firewall.shadowsocks.reload=0
 	commit firewall
 EOF
 if [ -f /etc/crontabs/root ]; then
