@@ -151,7 +151,9 @@ end
 function table_equal(t1, t2)
 	for k, v in pairs(t1) do
 		if "table" == type(v) then
-			return table_equal(v, t2[k])
+			if not table_equal(v, t2[k]) then
+				return false
+			end
 		else
 			if v ~= t2[k] then
 				return false
@@ -199,11 +201,9 @@ if #arg > 0 then
 	end
 	local changes = uci:changes(config)
 	if #changes > 0 then
-		local current = get_current_servers()
-		if table_equal(servers, current) then
-			uci:revert(config)
-		else
-			if uci:commit(config) then
+		if uci:commit(config) then
+			local current = get_current_servers()
+			if not table_equal(servers, current) then
 				os.execute("/etc/init.d/%s restart" %{config})
 			end
 		end
