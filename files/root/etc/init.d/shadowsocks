@@ -122,15 +122,15 @@ start_rules() {
 
 	config_load $NAME
 	/usr/bin/ss-rules $(get_arg_out) $(get_arg_udp) \
-		-s "$(echo $(config_foreach get_server_ips servers | sort -u))" \
+		-s "\"$(echo $(config_foreach get_server_ips servers | sort -u))\"" \
 		-l "$(uci_get_by_type transparent_proxy local_port 1234)" \
 		-B "$(uci_get_by_type access_control wan_bp_list)" \
-		-b "$(uci_get_by_type access_control wan_bp_ips)" \
+		-b "\"$(uci_get_by_type access_control wan_bp_ips)\"" \
 		-W "$(uci_get_by_type access_control wan_fw_list)" \
-		-w "$(uci_get_by_type access_control wan_fw_ips)" \
+		-w "\"$(uci_get_by_type access_control wan_fw_ips)\"" \
 		-I "$(uci_get_by_type access_control lan_ifaces)" \
 		-d "$(uci_get_by_type access_control lan_target)" \
-		-a "$(echo $(config_foreach get_lan_hosts lan_hosts))" \
+		-a "\"$(echo $(config_foreach get_lan_hosts lan_hosts))\"" \
 		-e "$(uci_get_by_type access_control ipt_ext)"
 }
 
