@@ -197,13 +197,13 @@ gen_prerouting_rules() {
 while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
 	case "$arg" in
 		s)
-			server=$(for ip in $OPTARG; do echo $ip; done)
+			server=$(for ip in $(echo $OPTARG | sed 's/\"//g'); do echo $ip; done)
 			;;
 		l)
 			local_port=$OPTARG
 			;;
 		S)
-			SERVER=$(for ip in $OPTARG; do echo $ip; done)
+			SERVER=$(for ip in $(echo $OPTARG | sed 's/\"//g'); do echo $ip; done)
 			;;
 		L)
 			LOCAL_PORT=$OPTARG
@@ -212,13 +212,13 @@ while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
 			WAN_BP_LIST=$OPTARG
 			;;
 		b)
-			WAN_BP_IP=$OPTARG
+			WAN_BP_IP=$(echo $OPTARG | sed 's/\"//g')
 			;;
 		W)
 			WAN_FW_LIST=$OPTARG
 			;;
 		w)
-			WAN_FW_IP=$OPTARG
+			WAN_FW_IP=$(echo $OPTARG | sed 's/\"//g')
 			;;
 		I)
 			IFNAMES=$OPTARG
@@ -227,7 +227,7 @@ while getopts ":s:l:S:L:B:b:W:w:I:d:a:e:oOuUfh" arg; do
 			LAN_TARGET=$OPTARG
 			;;
 		a)
-			LAN_HOSTS=$OPTARG
+			LAN_HOSTS=$(echo $OPTARG | sed 's/\"//g')
 			;;
 		e)
 			EXT_ARGS=$OPTARG
